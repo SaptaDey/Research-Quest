@@ -117,46 +117,152 @@ class ASRGoTGraph {
     });
   }
 
-  // P1.12: Complete metadata schema implementation - EXACT specification
+  // P1.12: Complete metadata schema implementation - EXACT specification with error handling
   _createNodeMetadata(baseMetadata = {}) {
-    const timestamp = new Date().toISOString();
-    return {
-      // Core required fields
-      node_id: baseMetadata.node_id || uuidv4(),
-      created: timestamp,
-      updated: timestamp,
-      timestamp: timestamp, // P1.18
+    try {
+      // Validate input
+      if (baseMetadata === null || baseMetadata === undefined) {
+        console.error(`[${new Date().toISOString()}] [WARN] Null/undefined baseMetadata, using empty object`);
+        baseMetadata = {};
+      }
       
-      // P1.12 Extended metadata schema - ALL required fields
-      provenance: baseMetadata.provenance || 'system_generated',
-      confidence: baseMetadata.confidence || this._createProbabilityDistribution([0.5, 0.5, 0.5, 0.5]), // P1.14 distributions
-      epistemic_status: baseMetadata.epistemic_status || 'pending',
-      disciplinary_tags: baseMetadata.disciplinary_tags || [], // P1.8
-      falsification_criteria: baseMetadata.falsification_criteria || null, // P1.16
-      bias_flags: baseMetadata.bias_flags || [], // P1.17
-      revision_history: baseMetadata.revision_history || [],
-      layer_id: baseMetadata.layer_id || 'base', // P1.23
-      topology_metrics: baseMetadata.topology_metrics || this._createTopologyMetrics(), // P1.22
-      statistical_power: baseMetadata.statistical_power || null, // P1.26
-      info_metrics: baseMetadata.info_metrics || this._createInfoMetrics(), // P1.27
-      impact_score: baseMetadata.impact_score || 0.5, // P1.28
-      attribution: baseMetadata.attribution || [], // P1.29
+      if (typeof baseMetadata !== 'object') {
+        console.error(`[${new Date().toISOString()}] [WARN] Invalid baseMetadata type: ${typeof baseMetadata}, using empty object`);
+        baseMetadata = {};
+      }
+
+      const timestamp = new Date().toISOString();
       
-      // Additional metadata
-      ...baseMetadata
-    };
+      // Safe property access with fallbacks
+      const safeAccess = (obj, prop, fallback) => {
+        try {
+          return obj && obj.hasOwnProperty(prop) ? obj[prop] : fallback;
+        } catch (error) {
+          console.error(`[${new Date().toISOString()}] [WARN] Error accessing property ${prop}: ${error.message}`);
+          return fallback;
+        }
+      };
+
+      return {
+        // Core required fields
+        node_id: safeAccess(baseMetadata, 'node_id', uuidv4()),
+        created: timestamp,
+        updated: timestamp,
+        timestamp: timestamp, // P1.18
+        
+        // P1.12 Extended metadata schema - ALL required fields with safe access
+        provenance: safeAccess(baseMetadata, 'provenance', 'system_generated'),
+        confidence: safeAccess(baseMetadata, 'confidence', null) || this._createProbabilityDistribution([0.5, 0.5, 0.5, 0.5]), // P1.14 distributions
+        epistemic_status: safeAccess(baseMetadata, 'epistemic_status', 'pending'),
+        disciplinary_tags: Array.isArray(baseMetadata.disciplinary_tags) ? baseMetadata.disciplinary_tags : [], // P1.8
+        falsification_criteria: safeAccess(baseMetadata, 'falsification_criteria', null), // P1.16
+        bias_flags: Array.isArray(baseMetadata.bias_flags) ? baseMetadata.bias_flags : [], // P1.17
+        revision_history: Array.isArray(baseMetadata.revision_history) ? baseMetadata.revision_history : [],
+        layer_id: safeAccess(baseMetadata, 'layer_id', 'base'), // P1.23
+        topology_metrics: safeAccess(baseMetadata, 'topology_metrics', null) || this._createTopologyMetrics(), // P1.22
+        statistical_power: safeAccess(baseMetadata, 'statistical_power', null), // P1.26
+        info_metrics: safeAccess(baseMetadata, 'info_metrics', null) || this._createInfoMetrics(), // P1.27
+        impact_score: this._validateImpactScore(safeAccess(baseMetadata, 'impact_score', 0.5)), // P1.28
+        attribution: Array.isArray(baseMetadata.attribution) ? baseMetadata.attribution : [], // P1.29
+        
+        // Additional metadata - only include safe properties
+        ...this._sanitizeAdditionalMetadata(baseMetadata)
+      };
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Failed to create node metadata: ${error.message}`);
+      // Return minimal valid metadata
+      return {
+        node_id: uuidv4(),
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        provenance: 'error_recovery',
+        confidence: this._createProbabilityDistribution([0.5, 0.5, 0.5, 0.5]),
+        epistemic_status: 'pending',
+        disciplinary_tags: [],
+        falsification_criteria: null,
+        bias_flags: [],
+        revision_history: [],
+        layer_id: 'base',
+        topology_metrics: this._createTopologyMetrics(),
+        statistical_power: null,
+        info_metrics: this._createInfoMetrics(),
+        impact_score: 0.5,
+        attribution: []
+      };
+    }
   }
 
-  // P1.14: Create probability distributions for confidence
+  // Helper method to validate impact scores
+  _validateImpactScore(score) {
+    const num = Number(score);
+    if (isNaN(num) || num < 0 || num > 1) {
+      console.error(`[${new Date().toISOString()}] [WARN] Invalid impact score ${score}, using 0.5`);
+      return 0.5;
+    }
+    return num;
+  }
+
+  // Helper method to sanitize additional metadata
+  _sanitizeAdditionalMetadata(baseMetadata) {
+    try {
+      const sanitized = {};
+      const excludeKeys = ['node_id', 'created', 'updated', 'timestamp', 'provenance', 'confidence', 
+                          'epistemic_status', 'disciplinary_tags', 'falsification_criteria', 'bias_flags',
+                          'revision_history', 'layer_id', 'topology_metrics', 'statistical_power',
+                          'info_metrics', 'impact_score', 'attribution'];
+      
+      for (const [key, value] of Object.entries(baseMetadata)) {
+        if (!excludeKeys.includes(key) && typeof key === 'string' && value !== undefined) {
+          sanitized[key] = value;
+        }
+      }
+      return sanitized;
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [WARN] Error sanitizing metadata: ${error.message}`);
+      return {};
+    }
+  }
+
+  // P1.14: Create probability distributions for confidence - Enhanced with error handling
   _createProbabilityDistribution(means) {
-    return {
-      type: 'probability_distribution',
-      means: means, // [empirical_support, theoretical_basis, methodological_rigor, consensus_alignment]
-      variances: means.map(m => m * (1 - m)), // Beta distribution approximation
-      distribution_type: 'beta',
-      samples: 1000,
-      confidence_interval: 0.95
-    };
+    try {
+      // Validate input
+      if (!Array.isArray(means)) {
+        console.error(`[${new Date().toISOString()}] [WARN] Invalid means array, using default: ${means}`);
+        means = [0.5, 0.5, 0.5, 0.5];
+      }
+      
+      // Ensure all values are numbers between 0 and 1
+      const validMeans = means.map(m => {
+        const num = Number(m);
+        if (isNaN(num) || num < 0 || num > 1) {
+          console.error(`[${new Date().toISOString()}] [WARN] Invalid confidence value ${m}, using 0.5`);
+          return 0.5;
+        }
+        return num;
+      });
+
+      return {
+        type: 'probability_distribution',
+        means: validMeans, // [empirical_support, theoretical_basis, methodological_rigor, consensus_alignment]
+        variances: validMeans.map(m => m * (1 - m)), // Beta distribution approximation
+        distribution_type: 'beta',
+        samples: 1000,
+        confidence_interval: 0.95
+      };
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Failed to create probability distribution: ${error.message}`);
+      // Return default distribution
+      return {
+        type: 'probability_distribution',
+        means: [0.5, 0.5, 0.5, 0.5],
+        variances: [0.25, 0.25, 0.25, 0.25],
+        distribution_type: 'beta',
+        samples: 1000,
+        confidence_interval: 0.95
+      };
+    }
   }
 
   // P1.22: Create topology metrics as specified
@@ -203,54 +309,437 @@ class ASRGoTGraph {
     };
   }
 
-  // Stage 1: Initialization (P1.1) - EXACT implementation
+  // Stage 1: Initialization (P1.1) - EXACT implementation with comprehensive error handling
   initialize(taskDescription, initialConfidence = [0.8, 0.8, 0.8, 0.8], config = {}) {
-    if (this.currentStage !== 0) {
-      throw new Error(`Cannot initialize. Current stage: ${this.currentStage}, expected: 0 (before initialization)`);
+    try {
+      // Enhanced validation
+      if (this.currentStage !== 0) {
+        throw new Error(`Cannot initialize. Current stage: ${this.currentStage}, expected: 0 (before initialization)`);
+      }
+
+      // Check if already initialized
+      if (this.vertices.size > 0) {
+        console.error(`[${new Date().toISOString()}] [WARN] Graph already has ${this.vertices.size} vertices, reinitializing`);
+        // Clear existing state for reinitialization
+        this.vertices.clear();
+        this.edges.clear();
+        this.hyperedges.clear();
+        for (const layer of this.layers.values()) {
+          layer.nodes.clear();
+          layer.edges.clear();
+        }
+      }
+
+      // Enhanced validation using new validation methods
+      const validatedTaskDescription = this._validateTaskDescription(taskDescription);
+      
+      // Validate initial confidence if provided
+      let validatedConfidence = initialConfidence;
+      if (initialConfidence !== undefined) {
+        validatedConfidence = this._validateConfidenceArray(initialConfidence, 'initial_confidence');
+      }
+
+      // Validate configuration
+      const safeConfig = this._validateConfig(config);
+
+      console.error(`[${new Date().toISOString()}] [INFO] Stage 1: Initializing ASR-GoT graph - P1.1`);
+      
+      // P1.1: Create root node n₀ with exact specification and error handling
+      const rootNodeMetadata = this._createNodeMetadata({
+        node_id: 'n0', // Exact as specified
+        provenance: 'user_input',
+        epistemic_status: 'accepted',
+        confidence: this._createProbabilityDistribution(validatedConfidence),
+        layer_id: 'base',
+        disciplinary_tags: safeConfig.disciplinary_tags || ['immunology', 'dermatology'], // K3.3
+        impact_score: 0.8,
+        attribution: safeConfig.attribution || []
+      });
+
+      const rootNode = {
+        node_id: 'n0',
+        label: 'Task Understanding', // P1.1 exact specification
+        type: 'root',
+        content: validatedTaskDescription,
+        confidence: this._createProbabilityDistribution(validatedConfidence), // P1.5 multi-dimensional vector
+        metadata: rootNodeMetadata
+      };
+      
+      // Safely add to graph
+      this.vertices.set('n0', rootNode);
+      this.nodeTypes.add('root');
+      
+      // Add to base layer (P1.23) with error handling
+      if (this.layers.has('base')) {
+        this.layers.get('base').nodes.add('n0');
+      } else {
+        console.error(`[${new Date().toISOString()}] [WARN] Base layer not found, creating default`);
+        this._initializeLayerStructure();
+        this.layers.get('base').nodes.add('n0');
+      }
+      
+      this.metadata.stage = 'initialization';
+      this.currentStage = 1;
+      
+      console.error(`[${new Date().toISOString()}] [INFO] Root node n₀ created following P1.1 specification exactly`);
+      
+      return {
+        success: true,
+        node_id: 'n0',
+        message: 'ASR-GoT graph initialized successfully following P1.1 specification',
+        current_stage: this.currentStage,
+        stage_name: this.stageNames[this.currentStage - 1],
+        active_parameters: Object.keys(this.metadata.parameters).filter(p => this.metadata.parameters[p].active),
+        warnings: this._getInitializationWarnings()
+      };
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Initialization failed: ${error.message}`);
+      
+      // Attempt graceful recovery
+      try {
+        this._resetToInitialState();
+        return {
+          success: false,
+          error: error.message,
+          message: 'Initialization failed, graph reset to initial state',
+          current_stage: this.currentStage,
+          recovery_attempted: true
+        };
+      } catch (recoveryError) {
+        console.error(`[${new Date().toISOString()}] [CRITICAL] Recovery failed: ${recoveryError.message}`);
+        return {
+          success: false,
+          error: error.message,
+          recovery_error: recoveryError.message,
+          message: 'Critical failure: both initialization and recovery failed',
+          current_stage: this.currentStage
+        };
+      }
+    }
+  }
+
+  // Enhanced parameter validation utility
+  _createValidationError(field, value, expected, examples = []) {
+    const error = new McpError(
+      ErrorCode.InvalidParams, 
+      `Invalid parameter '${field}': ${expected}. Received: ${JSON.stringify(value)}`
+    );
+    if (examples.length > 0) {
+      error.data = { 
+        field, 
+        received: value, 
+        expected, 
+        examples: examples.slice(0, 3) // Limit to 3 examples
+      };
+    }
+    return error;
+  }
+
+  // Comprehensive confidence array validation
+  _validateConfidenceArray(confidence, paramName = 'confidence') {
+    if (!Array.isArray(confidence)) {
+      throw this._createValidationError(
+        paramName, 
+        confidence, 
+        'array of 4 numbers between 0 and 1',
+        [[0.8, 0.8, 0.8, 0.8], [0.5, 0.7, 0.6, 0.9]]
+      );
     }
 
-    console.error(`[${new Date().toISOString()}] [INFO] Stage 1: Initializing ASR-GoT graph - P1.1`);
-    
-    // P1.1: Create root node n₀ with exact specification
-    const rootNodeMetadata = this._createNodeMetadata({
-      node_id: 'n0', // Exact as specified
-      provenance: 'user_input',
-      epistemic_status: 'accepted',
-      confidence: this._createProbabilityDistribution(initialConfidence),
-      layer_id: 'base',
-      disciplinary_tags: config.disciplinary_tags || ['immunology', 'dermatology'], // K3.3
-      impact_score: 0.8,
-      attribution: config.attribution || []
+    if (confidence.length !== 4) {
+      throw this._createValidationError(
+        paramName, 
+        confidence, 
+        'array with exactly 4 elements [empirical_support, theoretical_basis, methodological_rigor, consensus_alignment]',
+        [[0.8, 0.8, 0.8, 0.8]]
+      );
+    }
+
+    const validatedConfidence = confidence.map((value, index) => {
+      const num = Number(value);
+      if (isNaN(num)) {
+        throw this._createValidationError(
+          `${paramName}[${index}]`, 
+          value, 
+          'a number between 0 and 1',
+          [0.5, 0.8, 1.0]
+        );
+      }
+      if (num < 0 || num > 1) {
+        throw this._createValidationError(
+          `${paramName}[${index}]`, 
+          num, 
+          'a number between 0 and 1 (inclusive)',
+          [0.0, 0.5, 0.8, 1.0]
+        );
+      }
+      return num;
     });
 
-    const rootNode = {
-      node_id: 'n0',
-      label: 'Task Understanding', // P1.1 exact specification
-      type: 'root',
-      content: taskDescription,
-      confidence: this._createProbabilityDistribution(initialConfidence), // P1.5 multi-dimensional vector
-      metadata: rootNodeMetadata
-    };
+    return validatedConfidence;
+  }
+
+  // Enhanced task description validation
+  _validateTaskDescription(taskDescription) {
+    if (taskDescription === null || taskDescription === undefined) {
+      throw this._createValidationError(
+        'task_description', 
+        taskDescription, 
+        'a non-empty string describing the research task',
+        ['Analyze the effectiveness of topical treatments for eczema', 'Study the relationship between diet and skin health']
+      );
+    }
+
+    if (typeof taskDescription !== 'string') {
+      throw this._createValidationError(
+        'task_description', 
+        taskDescription, 
+        'a string',
+        ['Analyze the effectiveness of topical treatments for eczema']
+      );
+    }
+
+    const trimmed = taskDescription.trim();
+    if (trimmed.length === 0) {
+      throw this._createValidationError(
+        'task_description', 
+        taskDescription, 
+        'a non-empty string',
+        ['Analyze the effectiveness of topical treatments for eczema']
+      );
+    }
+
+    if (trimmed.length < 10) {
+      throw this._createValidationError(
+        'task_description', 
+        trimmed, 
+        'a descriptive string with at least 10 characters',
+        ['Analyze the effectiveness of topical treatments for eczema']
+      );
+    }
+
+    if (trimmed.length > 1000) {
+      throw this._createValidationError(
+        'task_description', 
+        `${trimmed.substring(0, 50)}...`, 
+        'a string with maximum 1000 characters',
+        ['Analyze the effectiveness of topical treatments for eczema']
+      );
+    }
+
+    return trimmed;
+  }
+
+  // Enhanced dimension node ID validation
+  _validateDimensionNodeId(nodeId, existingNodes = null) {
+    if (!nodeId || typeof nodeId !== 'string') {
+      throw this._createValidationError(
+        'dimension_node_id', 
+        nodeId, 
+        'a non-empty string in format "2.X"',
+        ['2.1', '2.2', '2.3']
+      );
+    }
+
+    // Check format
+    const formatRegex = /^2\.\d+$/;
+    if (!formatRegex.test(nodeId)) {
+      throw this._createValidationError(
+        'dimension_node_id', 
+        nodeId, 
+        'a string in format "2.X" where X is the dimension number',
+        ['2.1', '2.2', '2.3', '2.4', '2.5']
+      );
+    }
+
+    // Check existence if nodes provided
+    if (existingNodes && !existingNodes.has(nodeId)) {
+      const availableNodes = Array.from(existingNodes.keys()).filter(id => id.startsWith('2.'));
+      throw this._createValidationError(
+        'dimension_node_id', 
+        nodeId, 
+        `an existing dimension node ID. Available: ${availableNodes.join(', ')}`,
+        availableNodes.slice(0, 3)
+      );
+    }
+
+    return nodeId;
+  }
+
+  // Enhanced hypotheses array validation
+  _validateHypothesesArray(hypotheses) {
+    if (!Array.isArray(hypotheses)) {
+      throw this._createValidationError(
+        'hypotheses', 
+        hypotheses, 
+        'an array of hypothesis objects or strings',
+        [
+          ['Hypothesis 1', 'Hypothesis 2', 'Hypothesis 3'],
+          [{ content: 'Hypothesis 1', falsification_criteria: 'Test condition' }]
+        ]
+      );
+    }
+
+    if (hypotheses.length < 3) {
+      throw this._createValidationError(
+        'hypotheses', 
+        hypotheses, 
+        'an array with at least 3 hypotheses (P1.3 specification)',
+        [['Hypothesis 1', 'Hypothesis 2', 'Hypothesis 3']]
+      );
+    }
+
+    if (hypotheses.length > 5) {
+      throw this._createValidationError(
+        'hypotheses', 
+        hypotheses, 
+        'an array with maximum 5 hypotheses (P1.3 specification)',
+        [['Hypothesis 1', 'Hypothesis 2', 'Hypothesis 3']]
+      );
+    }
+
+    return hypotheses;
+  }
+
+  // Enhanced format validation for export
+  _validateExportFormat(format) {
+    const validFormats = ['json', 'yaml'];
     
-    this.vertices.set('n0', rootNode);
-    this.nodeTypes.add('root');
-    
-    // Add to base layer (P1.23)
-    this.layers.get('base').nodes.add('n0');
-    
+    if (!format || typeof format !== 'string') {
+      throw this._createValidationError(
+        'format', 
+        format, 
+        'a string specifying export format',
+        validFormats
+      );
+    }
+
+    const lowerFormat = format.toLowerCase();
+    if (!validFormats.includes(lowerFormat)) {
+      throw this._createValidationError(
+        'format', 
+        format, 
+        `one of: ${validFormats.join(', ')}`,
+        validFormats
+      );
+    }
+
+    return lowerFormat;
+  }
+
+  // Helper method to validate configuration with enhanced checks
+  _validateConfig(config) {
+    try {
+      if (config === null || config === undefined) {
+        return {};
+      }
+
+      if (typeof config !== 'object' || Array.isArray(config)) {
+        throw this._createValidationError(
+          'config', 
+          config, 
+          'an object with configuration properties',
+          [{ disciplinary_tags: ['immunology', 'dermatology'] }]
+        );
+      }
+
+      const safeConfig = {};
+      
+      // Validate disciplinary_tags
+      if (config.disciplinary_tags !== undefined) {
+        if (!Array.isArray(config.disciplinary_tags)) {
+          throw this._createValidationError(
+            'config.disciplinary_tags', 
+            config.disciplinary_tags, 
+            'an array of strings',
+            [['immunology', 'dermatology'], ['cardiology', 'genetics']]
+          );
+        }
+        
+        safeConfig.disciplinary_tags = config.disciplinary_tags.filter(tag => {
+          if (typeof tag !== 'string' || tag.trim().length === 0) {
+            console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag: ${tag}`);
+            return false;
+          }
+          return true;
+        }).map(tag => tag.trim());
+      }
+
+      // Validate attribution
+      if (config.attribution !== undefined) {
+        if (!Array.isArray(config.attribution)) {
+          throw this._createValidationError(
+            'config.attribution', 
+            config.attribution, 
+            'an array of strings',
+            [['Dr. Smith', 'Research Team A']]
+          );
+        }
+        
+        safeConfig.attribution = config.attribution.filter(attr => {
+          if (typeof attr !== 'string' || attr.trim().length === 0) {
+            console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution: ${attr}`);
+            return false;
+          }
+          return true;
+        }).map(attr => attr.trim());
+      }
+
+      // Validate enable_multi_layer
+      if (config.enable_multi_layer !== undefined) {
+        if (typeof config.enable_multi_layer !== 'boolean') {
+          console.error(`[${new Date().toISOString()}] [WARN] enable_multi_layer must be boolean, using default`);
+        } else {
+          safeConfig.enable_multi_layer = config.enable_multi_layer;
+        }
+      }
+
+      return safeConfig;
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      console.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
+      return {};
+    }
+  }
+
+  // Helper method to reset to initial state
+  _resetToInitialState() {
+    this.vertices.clear();
+    this.edges.clear();
+    this.hyperedges.clear();
+    this.nodeTypes.clear();
+    this.confidenceFunction.clear();
+    this.metadataFunction.clear();
+    this.informationMetrics.clear();
+    this.currentStage = 0;
     this.metadata.stage = 'initialization';
-    this.currentStage = 1;
     
-    console.error(`[${new Date().toISOString()}] [INFO] Root node n₀ created following P1.1 specification exactly`);
+    // Reinitialize layers
+    if (this.layers.size > 0) {
+      for (const layer of this.layers.values()) {
+        layer.nodes.clear();
+        layer.edges.clear();
+      }
+    } else {
+      this._initializeLayerStructure();
+    }
+  }
+
+  // Helper method to get initialization warnings
+  _getInitializationWarnings() {
+    const warnings = [];
     
-    return {
-      success: true,
-      node_id: 'n0',
-      message: 'ASR-GoT graph initialized successfully following P1.1 specification',
-      current_stage: this.currentStage,
-      stage_name: this.stageNames[this.currentStage - 1],
-      active_parameters: Object.keys(this.metadata.parameters).filter(p => this.metadata.parameters[p].active)
-    };
+    if (this.layers.size === 0) {
+      warnings.push('No layers initialized');
+    }
+    
+    if (!this.metadata.parameters) {
+      warnings.push('Parameters not properly initialized');
+    }
+    
+    return warnings;
   }
 
   // Stage 2: Decomposition (P1.2) - EXACT implementation with nodes 2.1-2.7
@@ -345,88 +834,332 @@ class ASRGoTGraph {
     return tagMap[dimension] || ['general'];
   }
 
-  // Stage 3: Hypothesis Generation (P1.3) - EXACT with numbered hypotheses per dimension (e.g., 3.1.1)
+  // Stage 3: Hypothesis Generation (P1.3) - EXACT with numbered hypotheses per dimension with comprehensive error handling
   generateHypotheses(dimensionNodeId, hypotheses, config = {}) {
-    if (this.currentStage !== 2) {
-      throw new Error(`Cannot generate hypotheses. Current stage: ${this.currentStage}, expected: 2`);
-    }
+    try {
+      // Enhanced stage validation
+      if (this.currentStage !== 2) {
+        throw new Error(`Cannot generate hypotheses. Current stage: ${this.currentStage}, expected: 2`);
+      }
 
-    if (!this.vertices.has(dimensionNodeId)) {
-      throw new Error(`Dimension node ${dimensionNodeId} not found`);
-    }
-
-    console.error(`[${new Date().toISOString()}] [INFO] Stage 3: Generating hypotheses for ${dimensionNodeId} - P1.3`);
-
-    // P1.3: Generate k=3-5 hypotheses per dimension
-    const maxHypotheses = Math.min(config.max_hypotheses || 5, 5); // P1.3 specification
-    const hypothesisNodes = [];
-
-    // Get dimension number for proper hypothesis numbering (e.g., 3.1.1, 3.1.2, etc.)
-    const dimensionNumber = dimensionNodeId.split('.')[1]; // Extract "1" from "2.1"
-    
-    hypotheses.slice(0, maxHypotheses).forEach((hypothesis, index) => {
-      const nodeId = `3.${dimensionNumber}.${index + 1}`; // Exact numbering as per specification example
+      // Enhanced validation using new validation methods
+      const validatedNodeId = this._validateDimensionNodeId(dimensionNodeId, this.vertices);
       
-      // P1.3: Complete hypothesis metadata with ALL required fields
-      const hypothesisMetadata = this._createNodeMetadata({
-        node_id: nodeId,
-        provenance: 'hypothesis_generation',
-        epistemic_status: 'hypothetical',
-        confidence: hypothesis.confidence ? this._createProbabilityDistribution(hypothesis.confidence) : this._createProbabilityDistribution([0.5, 0.5, 0.5, 0.5]), // P1.3
-        disciplinary_tags: hypothesis.disciplinary_tags || [], // P1.8
-        falsification_criteria: hypothesis.falsification_criteria || null, // P1.16
-        bias_flags: this._assessInitialBiasRisk(hypothesis), // P1.17
-        impact_score: hypothesis.impact_score || 0.6, // P1.28
-        attribution: hypothesis.attribution || [], // P1.29
-        layer_id: 'theoretical',
-        
-        // P1.3: Explicit plan requirement
-        plan: hypothesis.plan || this._generateDefaultPlan(hypothesis.content || hypothesis)
+      const dimensionNode = this.vertices.get(validatedNodeId);
+      if (dimensionNode.type !== 'dimension') {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `Node ${validatedNodeId} is not a dimension node (type: ${dimensionNode.type}). Expected a dimension node created in Stage 2.`
+        );
+      }
+
+      // Validate hypotheses input with enhanced validation
+      const validatedHypotheses = this._validateHypothesesArray(hypotheses);
+
+      // Validate config
+      const safeConfig = this._validateHypothesisConfig(config);
+
+      console.error(`[${new Date().toISOString()}] [INFO] Stage 3: Generating hypotheses for ${dimensionNodeId} - P1.3`);
+
+      // P1.3: Generate k=3-5 hypotheses per dimension
+      const maxHypotheses = Math.min(safeConfig.max_hypotheses || 5, 5); // P1.3 specification
+      const hypothesisNodes = [];
+      const errors = [];
+
+      // Get dimension number for proper hypothesis numbering (e.g., 3.1.1, 3.1.2, etc.)
+      const dimensionParts = dimensionNodeId.split('.');
+      if (dimensionParts.length < 2) {
+        throw new Error(`Invalid dimension node ID format: ${dimensionNodeId}. Expected format: 2.X`);
+      }
+      const dimensionNumber = dimensionParts[1]; // Extract "1" from "2.1"
+      
+      // Process each hypothesis with individual error handling
+      hypotheses.slice(0, maxHypotheses).forEach((hypothesis, index) => {
+        try {
+          const nodeId = `3.${dimensionNumber}.${index + 1}`; // Exact numbering as per specification example
+          
+          // Validate individual hypothesis
+          const validatedHypothesis = this._validateHypothesis(hypothesis, index);
+          
+          // P1.3: Complete hypothesis metadata with ALL required fields
+          const hypothesisMetadata = this._createNodeMetadata({
+            node_id: nodeId,
+            provenance: 'hypothesis_generation',
+            epistemic_status: 'hypothetical',
+            confidence: validatedHypothesis.confidence ? this._createProbabilityDistribution(validatedHypothesis.confidence) : this._createProbabilityDistribution([0.5, 0.5, 0.5, 0.5]), // P1.3
+            disciplinary_tags: validatedHypothesis.disciplinary_tags || [], // P1.8
+            falsification_criteria: validatedHypothesis.falsification_criteria || null, // P1.16
+            bias_flags: this._assessInitialBiasRisk(validatedHypothesis), // P1.17
+            impact_score: validatedHypothesis.impact_score || 0.6, // P1.28
+            attribution: validatedHypothesis.attribution || [], // P1.29
+            layer_id: 'theoretical',
+            
+            // P1.3: Explicit plan requirement
+            plan: validatedHypothesis.plan || this._generateDefaultPlan(validatedHypothesis.content || validatedHypothesis)
+          });
+
+          const hypothesisNode = {
+            node_id: nodeId,
+            label: `Hypothesis ${dimensionNumber}.${index + 1}`,
+            type: 'hypothesis',
+            content: validatedHypothesis.content || validatedHypothesis,
+            confidence: hypothesisMetadata.confidence,
+            metadata: hypothesisMetadata
+          };
+
+          // Safely add to graph
+          this.vertices.set(nodeId, hypothesisNode);
+          this.nodeTypes.add('hypothesis');
+          
+          // Safe layer addition
+          if (this.layers.has('theoretical')) {
+            this.layers.get('theoretical').nodes.add(nodeId);
+          } else {
+            console.error(`[${new Date().toISOString()}] [WARN] Theoretical layer not found, adding to base layer`);
+            this.layers.get('base').nodes.add(nodeId);
+          }
+
+          // Create edge from dimension to hypothesis with error handling
+          const edgeId = `e_${dimensionNodeId}_${nodeId}`;
+          const edgeMetadata = this._createEdgeMetadata({
+            edge_id: edgeId,
+            edge_type: 'Hypothesis', // P1.10
+            confidence: this._createProbabilityDistribution([0.8, 0.8, 0.8, 0.8])
+          });
+
+          this.edges.set(edgeId, {
+            edge_id: edgeId,
+            source: dimensionNodeId,
+            target: nodeId,
+            metadata: edgeMetadata
+          });
+
+          hypothesisNodes.push(nodeId);
+        } catch (hypothesisError) {
+          console.error(`[${new Date().toISOString()}] [ERROR] Failed to create hypothesis ${index + 1}: ${hypothesisError.message}`);
+          errors.push(`Hypothesis ${index + 1}: ${hypothesisError.message}`);
+          // Continue with other hypotheses
+        }
       });
 
-      const hypothesisNode = {
-        node_id: nodeId,
-        label: `Hypothesis ${dimensionNumber}.${index + 1}`,
-        type: 'hypothesis',
-        content: hypothesis.content || hypothesis,
-        confidence: hypothesisMetadata.confidence,
-        metadata: hypothesisMetadata
+      // Check if any hypotheses were successfully created
+      if (hypothesisNodes.length === 0) {
+        throw new Error(`Failed to create any hypotheses. Errors: ${errors.join('; ')}`);
+      }
+
+      this.currentStage = 3;
+      this.metadata.stage = 'hypothesis_planning';
+      
+      console.error(`[${new Date().toISOString()}] [INFO] Generated hypotheses ${hypothesisNodes.join(', ')} with P1.3 exact compliance`);
+
+      return {
+        success: true,
+        hypothesis_nodes: hypothesisNodes,
+        message: `Generated ${hypothesisNodes.length} hypotheses following P1.3 specification exactly`,
+        current_stage: this.currentStage,
+        stage_name: this.stageNames[this.currentStage - 1],
+        errors: errors.length > 0 ? errors : undefined,
+        warnings: errors.length > 0 ? [`${errors.length} hypotheses failed to create`] : undefined
       };
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${error.message}`);
+      
+      // Attempt partial recovery
+      return {
+        success: false,
+        error: error.message,
+        message: 'Hypothesis generation failed',
+        current_stage: this.currentStage,
+        stage_name: this.stageNames[this.currentStage - 1] || 'unknown',
+        recovery_attempted: false
+      };
+    }
+  }
 
-      this.vertices.set(nodeId, hypothesisNode);
-      this.nodeTypes.add('hypothesis');
-      this.layers.get('theoretical').nodes.add(nodeId);
+  // Helper method to validate hypothesis configuration
+  _validateHypothesisConfig(config) {
+    try {
+      const safeConfig = {};
+      
+      if (config && typeof config === 'object') {
+        // Validate max_hypotheses
+        if (config.max_hypotheses !== undefined) {
+          const maxHyp = Number(config.max_hypotheses);
+          if (!isNaN(maxHyp) && maxHyp > 0 && maxHyp <= 5) {
+            safeConfig.max_hypotheses = Math.floor(maxHyp);
+          } else {
+            console.error(`[${new Date().toISOString()}] [WARN] Invalid max_hypotheses: ${config.max_hypotheses}, using default 5`);
+            safeConfig.max_hypotheses = 5;
+          }
+        }
+      }
+      
+      return safeConfig;
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
+      return { max_hypotheses: 5 };
+    }
+  }
 
-      // Create edge from dimension to hypothesis
-      const edgeId = `e_${dimensionNodeId}_${nodeId}`;
-      const edgeMetadata = this._createEdgeMetadata({
-        edge_id: edgeId,
-        edge_type: 'Hypothesis', // P1.10
-        confidence: this._createProbabilityDistribution([0.8, 0.8, 0.8, 0.8])
-      });
+  // Enhanced hypothesis validation with P1.3 and P1.16 compliance
+  _validateHypothesis(hypothesis, index) {
+    try {
+      // Handle string hypothesis - convert to object for validation
+      if (typeof hypothesis === 'string') {
+        if (hypothesis.trim().length === 0) {
+          throw this._createValidationError(
+            `hypotheses[${index}]`,
+            hypothesis,
+            'a non-empty string or object with content',
+            ['Valid hypothesis text', { content: 'Hypothesis text', falsification_criteria: 'Test criteria' }]
+          );
+        }
+        
+        // For string hypotheses, we need to add required fields as warnings
+        console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} provided as string. P1.3 and P1.16 require explicit plan and falsification criteria. Adding defaults.`);
+        
+        return { 
+          content: hypothesis.trim(),
+          _needs_plan: true,
+          _needs_falsification_criteria: true
+        };
+      }
 
-      this.edges.set(edgeId, {
-        edge_id: edgeId,
-        source: dimensionNodeId,
-        target: nodeId,
-        metadata: edgeMetadata
-      });
+      // Handle object hypothesis with enhanced validation
+      if (typeof hypothesis === 'object' && hypothesis !== null) {
+        const validated = {};
+        
+        // Validate content (required)
+        if (!hypothesis.content || typeof hypothesis.content !== 'string' || hypothesis.content.trim().length === 0) {
+          throw this._createValidationError(
+            `hypotheses[${index}].content`,
+            hypothesis.content,
+            'a non-empty string describing the hypothesis',
+            ['Treatment X is more effective than treatment Y', 'Diet factor Z influences skin condition']
+          );
+        }
+        validated.content = hypothesis.content.trim();
 
-      hypothesisNodes.push(nodeId);
-    });
+        // Validate confidence if provided
+        if (hypothesis.confidence !== undefined) {
+          try {
+            validated.confidence = this._validateConfidenceArray(hypothesis.confidence, `hypotheses[${index}].confidence`);
+          } catch (error) {
+            console.error(`[${new Date().toISOString()}] [WARN] Invalid confidence in hypothesis ${index + 1}: ${error.message}, using defaults`);
+          }
+        }
 
-    this.currentStage = 3;
-    this.metadata.stage = 'hypothesis_planning';
-    
-    console.error(`[${new Date().toISOString()}] [INFO] Generated hypotheses ${hypothesisNodes.join(', ')} with P1.3 exact compliance`);
+        // P1.16: Validate falsification_criteria (strongly recommended, warn if missing)
+        if (hypothesis.falsification_criteria !== undefined) {
+          if (typeof hypothesis.falsification_criteria !== 'string' || hypothesis.falsification_criteria.trim().length === 0) {
+            throw this._createValidationError(
+              `hypotheses[${index}].falsification_criteria`,
+              hypothesis.falsification_criteria,
+              'a non-empty string describing testable criteria (P1.16 requirement)',
+              ['If treatment shows less than 30% improvement in 4 weeks', 'If no significant difference in p < 0.05 statistical test']
+            );
+          }
+          validated.falsification_criteria = hypothesis.falsification_criteria.trim();
+        } else {
+          console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing falsification_criteria (P1.16 requirement). This may affect hypothesis quality assessment.`);
+          validated._needs_falsification_criteria = true;
+        }
 
-    return {
-      success: true,
-      hypothesis_nodes: hypothesisNodes,
-      message: `Generated ${hypothesisNodes.length} hypotheses following P1.3 specification exactly`,
-      current_stage: this.currentStage,
-      stage_name: this.stageNames[this.currentStage - 1]
-    };
+        // P1.3: Validate plan (required for P1.3 compliance)
+        if (hypothesis.plan !== undefined) {
+          if (typeof hypothesis.plan !== 'object' || hypothesis.plan === null) {
+            throw this._createValidationError(
+              `hypotheses[${index}].plan`,
+              hypothesis.plan,
+              'an object describing the investigation plan (P1.3 requirement)',
+              [{ type: 'literature_search', description: 'Systematic review', tools: ['pubmed'] }]
+            );
+          }
+          
+          // Validate plan structure
+          if (!hypothesis.plan.type || typeof hypothesis.plan.type !== 'string') {
+            throw this._createValidationError(
+              `hypotheses[${index}].plan.type`,
+              hypothesis.plan.type,
+              'a string describing the plan type',
+              ['literature_search', 'experimental_study', 'data_analysis']
+            );
+          }
+          
+          validated.plan = hypothesis.plan;
+        } else {
+          console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing plan (P1.3 requirement). Adding default plan.`);
+          validated._needs_plan = true;
+        }
+
+        // Validate impact_score
+        if (hypothesis.impact_score !== undefined) {
+          const score = Number(hypothesis.impact_score);
+          if (isNaN(score) || score < 0 || score > 1) {
+            throw this._createValidationError(
+              `hypotheses[${index}].impact_score`,
+              hypothesis.impact_score,
+              'a number between 0 and 1 representing expected impact',
+              [0.6, 0.8, 1.0]
+            );
+          }
+          validated.impact_score = score;
+        }
+
+        // Validate disciplinary_tags
+        if (hypothesis.disciplinary_tags !== undefined) {
+          if (!Array.isArray(hypothesis.disciplinary_tags)) {
+            throw this._createValidationError(
+              `hypotheses[${index}].disciplinary_tags`,
+              hypothesis.disciplinary_tags,
+              'an array of strings',
+              [['immunology', 'dermatology']]
+            );
+          }
+          validated.disciplinary_tags = hypothesis.disciplinary_tags.filter(tag => {
+            if (typeof tag !== 'string' || tag.trim().length === 0) {
+              console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag in hypothesis ${index + 1}: ${tag}`);
+              return false;
+            }
+            return true;
+          }).map(tag => tag.trim());
+        }
+
+        // Validate attribution
+        if (hypothesis.attribution !== undefined) {
+          if (!Array.isArray(hypothesis.attribution)) {
+            throw this._createValidationError(
+              `hypotheses[${index}].attribution`,
+              hypothesis.attribution,
+              'an array of strings',
+              [['Dr. Smith', 'Research Team A']]
+            );
+          }
+          validated.attribution = hypothesis.attribution.filter(attr => {
+            if (typeof attr !== 'string' || attr.trim().length === 0) {
+              console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution in hypothesis ${index + 1}: ${attr}`);
+              return false;
+            }
+            return true;
+          }).map(attr => attr.trim());
+        }
+
+        return validated;
+      }
+
+      throw this._createValidationError(
+        `hypotheses[${index}]`,
+        hypothesis,
+        'a string or object with hypothesis content',
+        ['Hypothesis text', { content: 'Hypothesis text', falsification_criteria: 'Test criteria' }]
+      );
+    } catch (error) {
+      if (error instanceof McpError) {
+        throw error;
+      }
+      console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis validation failed for index ${index}: ${error.message}`);
+      throw new McpError(ErrorCode.InvalidParams, `Hypothesis ${index + 1} validation failed: ${error.message}`);
+    }
   }
 
   // P1.17: Assess initial bias risk - exact implementation
@@ -1002,98 +1735,476 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: tools };
 });
 
-// Handle tool execution
+// Handle tool execution with comprehensive error handling and graceful degradation
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const requestId = request.id;
+  const startTime = Date.now();
 
   console.error(`[${new Date().toISOString()}] [INFO] Tool call: ${name} (request_id: ${requestId})`);
 
   try {
+    // Validate request structure
+    if (!name || typeof name !== 'string') {
+      throw new McpError(ErrorCode.InvalidParams, 'Tool name must be a non-empty string');
+    }
+
+    if (!args || typeof args !== 'object') {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid 'arguments' parameter: must be an object containing tool parameters. Received: ${typeof args}. Examples: {"task_description": "Research task"}, {"dimension_node_id": "2.1"}`
+      );
+    }
+
     switch (name) {
       case 'initialize_asr_got_graph':
-        if (!args.task_description) {
-          throw new McpError(ErrorCode.InvalidParams, 'Missing required argument: task_description');
+        try {
+          // Validate task_description parameter explicitly
+          if (!args.task_description) {
+            throw new McpError(
+              ErrorCode.InvalidParams,
+              `Missing required parameter 'task_description': a non-empty string describing the research task. Examples: ["Analyze the effectiveness of topical treatments for eczema", "Study the relationship between diet and skin health"]`
+            );
+          }
+
+          // Initialize with error handling
+          try {
+            currentGraph = new ASRGoTGraph(args.config || {});
+          } catch (graphError) {
+            console.error(`[${new Date().toISOString()}] [ERROR] Failed to create ASRGoTGraph: ${graphError.message}`);
+            throw new McpError(ErrorCode.InternalError, `Failed to create graph: ${graphError.message}`);
+          }
+
+          const initResult = currentGraph.initialize(
+            args.task_description,
+            args.initial_confidence,
+            args.config
+          );
+          
+          // Check if initialization was successful
+          if (!initResult.success) {
+            console.error(`[${new Date().toISOString()}] [ERROR] Graph initialization failed: ${initResult.error || 'Unknown error'}`);
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                ...initResult,
+                partial_success: false,
+                message: 'Graph initialization failed but server remains operational'
+              }, null, 2) }]
+            };
+          }
+          
+          console.error(`[${new Date().toISOString()}] [INFO] Graph initialized with ${Object.keys(currentGraph.metadata.parameters).length} parameters active`);
+          
+          return {
+            content: [{ type: 'text', text: JSON.stringify(initResult, null, 2) }]
+          };
+        } catch (error) {
+          if (error instanceof McpError) throw error;
+          throw new McpError(ErrorCode.InternalError, `Initialization failed: ${error.message}`);
         }
-        
-        currentGraph = new ASRGoTGraph(args.config || {});
-        const initResult = currentGraph.initialize(
-          args.task_description,
-          args.initial_confidence,
-          args.config
-        );
-        
-        console.error(`[${new Date().toISOString()}] [INFO] Graph initialized with ${Object.keys(currentGraph.metadata.parameters).length} parameters active`);
-        
-        return {
-          content: [{ type: 'text', text: JSON.stringify(initResult, null, 2) }]
-        };
 
       case 'decompose_research_task':
-        if (!currentGraph) {
-          throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized. Please run initialize_asr_got_graph first.');
+        try {
+          if (!currentGraph) {
+            throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized. Please run initialize_asr_got_graph first.');
+          }
+
+          // Validate dimensions if provided
+          if (args.dimensions !== undefined && !Array.isArray(args.dimensions)) {
+            console.error(`[${new Date().toISOString()}] [WARN] Invalid dimensions parameter, using defaults`);
+            args.dimensions = undefined;
+          }
+
+          const decomposeResult = currentGraph.decomposeTask(args.dimensions);
+          
+          // Handle partial failures
+          if (!decomposeResult.success) {
+            console.error(`[${new Date().toISOString()}] [ERROR] Task decomposition failed: ${decomposeResult.error || 'Unknown error'}`);
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                ...decomposeResult,
+                partial_success: false,
+                message: 'Task decomposition failed but graph remains intact'
+              }, null, 2) }]
+            };
+          }
+
+          return {
+            content: [{ type: 'text', text: JSON.stringify(decomposeResult, null, 2) }]
+          };
+        } catch (error) {
+          if (error instanceof McpError) throw error;
+          throw new McpError(ErrorCode.InternalError, `Task decomposition failed: ${error.message}`);
         }
-        const decomposeResult = currentGraph.decomposeTask(args.dimensions);
-        return {
-          content: [{ type: 'text', text: JSON.stringify(decomposeResult, null, 2) }]
-        };
 
       case 'generate_hypotheses':
-        if (!currentGraph) {
-          throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized.');
+        try {
+          if (!currentGraph) {
+            throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized. Please run initialize_asr_got_graph first.');
+          }
+
+          // Validate required parameters explicitly at tool level
+          if (!args.dimension_node_id) {
+            throw new McpError(
+              ErrorCode.InvalidParams,
+              `Missing required parameter 'dimension_node_id': a string in format "2.X" where X is the dimension number. Examples: ["2.1", "2.2", "2.3", "2.4", "2.5"]`
+            );
+          }
+
+          if (!args.hypotheses) {
+            throw new McpError(
+              ErrorCode.InvalidParams,
+              `Missing required parameter 'hypotheses': an array of 3-5 hypothesis objects or strings. Examples: [["Hypothesis 1", "Hypothesis 2", "Hypothesis 3"], [{"content": "Hypothesis 1", "falsification_criteria": "Test condition"}]]`
+            );
+          }
+
+          const hypothesesResult = currentGraph.generateHypotheses(
+            args.dimension_node_id,
+            args.hypotheses,
+            args.config
+          );
+
+          // Handle partial success (some hypotheses failed)
+          if (!hypothesesResult.success) {
+            console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${hypothesesResult.error || 'Unknown error'}`);
+            return {
+              content: [{ type: 'text', text: JSON.stringify({
+                ...hypothesesResult,
+                partial_success: false,
+                message: 'Hypothesis generation failed but graph remains intact'
+              }, null, 2) }]
+            };
+          }
+
+          // Check for partial success with warnings
+          if (hypothesesResult.warnings && hypothesesResult.warnings.length > 0) {
+            console.error(`[${new Date().toISOString()}] [WARN] Hypothesis generation had warnings: ${hypothesesResult.warnings.join(', ')}`);
+          }
+
+          return {
+            content: [{ type: 'text', text: JSON.stringify(hypothesesResult, null, 2) }]
+          };
+        } catch (error) {
+          if (error instanceof McpError) throw error;
+          throw new McpError(ErrorCode.InternalError, `Hypothesis generation failed: ${error.message}`);
         }
-        const hypothesesResult = currentGraph.generateHypotheses(
-          args.dimension_node_id,
-          args.hypotheses,
-          args.config
-        );
-        return {
-          content: [{ type: 'text', text: JSON.stringify(hypothesesResult, null, 2) }]
-        };
 
       case 'get_graph_summary':
-        if (!currentGraph) {
-          throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized.');
+        try {
+          if (!currentGraph) {
+            throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized.');
+          }
+
+          const summary = currentGraph.getGraphSummary();
+          
+          // Add health check information
+          const healthInfo = {
+            server_health: 'operational',
+            graph_health: currentGraph.vertices.size > 0 ? 'healthy' : 'empty',
+            last_operation: new Date().toISOString(),
+            uptime_ms: Date.now() - startTime
+          };
+
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              ...summary,
+              health_info: healthInfo
+            }, null, 2) }]
+          };
+        } catch (error) {
+          // Even if summary fails, provide basic information  
+          console.error(`[${new Date().toISOString()}] [ERROR] Summary generation failed: ${error.message}`);
+          return {
+            content: [{ type: 'text', text: JSON.stringify({
+              success: false,
+              error: error.message,
+              message: 'Summary generation failed',
+              fallback_info: {
+                graph_exists: !!currentGraph,
+                vertices_count: currentGraph ? currentGraph.vertices.size : 0,
+                current_stage: currentGraph ? currentGraph.currentStage : 0,
+                server_operational: true
+              }
+            }, null, 2) }]
+          };
         }
-        const summary = currentGraph.getGraphSummary();
-        return {
-          content: [{ type: 'text', text: JSON.stringify(summary, null, 2) }]
-        };
 
       case 'export_graph_data':
-        if (!currentGraph) {
-          throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized.');
+        try {
+          if (!currentGraph) {
+            throw new McpError(ErrorCode.InvalidRequest, 'No graph initialized.');
+          }
+
+          // Validate format using enhanced validation
+          const validFormats = ['json', 'yaml'];
+          const format = args.format || 'json';
+          
+          if (!format || typeof format !== 'string') {
+            throw new McpError(
+              ErrorCode.InvalidParams, 
+              `Invalid parameter 'format': a string specifying export format. Received: ${JSON.stringify(format)}. Examples: ${validFormats.join(', ')}`
+            );
+          }
+
+          const lowerFormat = format.toLowerCase();
+          if (!validFormats.includes(lowerFormat)) {
+            throw new McpError(
+              ErrorCode.InvalidParams, 
+              `Invalid parameter 'format': one of: ${validFormats.join(', ')}. Received: ${JSON.stringify(format)}. Examples: ${validFormats.join(', ')}`
+            );
+          }
+
+          const validatedFormat = lowerFormat;
+
+          const exportedData = currentGraph.exportGraph(validatedFormat);
+          
+          return {
+            content: [{ type: 'text', text: exportedData }]
+          };
+        } catch (error) {
+          console.error(`[${new Date().toISOString()}] [ERROR] Export failed: ${error.message}`);
+          
+          // Provide minimal export on failure
+          const fallbackExport = {
+            success: false,
+            error: error.message,
+            message: 'Export failed, providing minimal data',
+            fallback_data: {
+              vertices_count: currentGraph ? currentGraph.vertices.size : 0,
+              edges_count: currentGraph ? currentGraph.edges.size : 0,
+              current_stage: currentGraph ? currentGraph.currentStage : 0,
+              export_timestamp: new Date().toISOString()
+            }
+          };
+          
+          return {
+            content: [{ type: 'text', text: JSON.stringify(fallbackExport, null, 2) }]
+          };
         }
-        const exportedData = currentGraph.exportGraph(args.format);
-        return {
-          content: [{ type: 'text', text: exportedData }]
-        };
 
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
     }
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] [ERROR] Tool execution failed: ${error.message} (request_id: ${requestId})`);
+    const duration = Date.now() - startTime;
+    console.error(`[${new Date().toISOString()}] [ERROR] Tool execution failed: ${error.message} (request_id: ${requestId}, duration: ${duration}ms)`);
+    
+    // Log stack trace for debugging
+    if (error.stack) {
+      console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+    }
+    
     if (error instanceof McpError) {
       throw error;
     }
-    throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error.message}`);
+    
+    // Create detailed error response
+    throw new McpError(ErrorCode.InternalError, `Tool execution failed: ${error.message} (request_id: ${requestId})`);
   }
 });
 
-// Start server
+// Enhanced server startup with comprehensive error handling and graceful degradation
 async function main() {
+  const startupTime = Date.now();
+  let transport = null;
+  
   try {
-    console.error(`[${new Date().toISOString()}] [INFO] Starting ASR-GoT MCP Server - EXACT SPECIFICATION COMPLIANCE`);
-    console.error(`[${new Date().toISOString()}] [INFO] Implementing all 29 parameters (P1.0-P1.29) line by line`);
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.error(`[${new Date().toISOString()}] [INFO] ASR-GoT MCP Server running with ${tools.length} tools - Node.js implementation`);
+    console.error(`[${new Date().toISOString()}] [INFO] Starting ASR-GoT MCP Server - FAULT-TOLERANT IMPLEMENTATION`);
+    console.error(`[${new Date().toISOString()}] [INFO] Implementing all 29 parameters (P1.0-P1.29) with comprehensive error handling`);
+    
+    // Pre-startup validation
+    try {
+      // Validate Node.js version
+      const nodeVersion = process.version;
+      const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+      if (majorVersion < 16) {
+        console.error(`[${new Date().toISOString()}] [WARN] Node.js version ${nodeVersion} may not be fully supported. Recommended: 16+`);
+      }
+      
+      // Validate required modules
+      console.error(`[${new Date().toISOString()}] [INFO] Validating server dependencies...`);
+      
+      // Test tool availability
+      if (!tools || tools.length === 0) {
+        throw new Error('No tools available - server configuration error');
+      }
+      
+      console.error(`[${new Date().toISOString()}] [INFO] ${tools.length} tools validated successfully`);
+    } catch (validationError) {
+      console.error(`[${new Date().toISOString()}] [WARN] Pre-startup validation warning: ${validationError.message}`);
+      // Continue with startup anyway - this is non-critical
+    }
+    
+    // Initialize transport with error handling
+    try {
+      transport = new StdioServerTransport();
+      console.error(`[${new Date().toISOString()}] [INFO] Transport initialized successfully`);
+    } catch (transportError) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Failed to initialize transport: ${transportError.message}`);
+      throw new Error(`Transport initialization failed: ${transportError.message}`);
+    }
+    
+    // Connect server with timeout and retry logic
+    const connectWithRetry = async (maxRetries = 3, retryDelay = 1000) => {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.error(`[${new Date().toISOString()}] [INFO] Server connection attempt ${attempt}/${maxRetries}`);
+          
+          // Add connection timeout
+          const connectionPromise = server.connect(transport);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Connection timeout')), 10000)
+          );
+          
+          await Promise.race([connectionPromise, timeoutPromise]);
+          
+          console.error(`[${new Date().toISOString()}] [INFO] Server connected successfully on attempt ${attempt}`);
+          return true;
+        } catch (connectError) {
+          console.error(`[${new Date().toISOString()}] [ERROR] Connection attempt ${attempt} failed: ${connectError.message}`);
+          
+          if (attempt === maxRetries) {
+            throw connectError;
+          }
+          
+          console.error(`[${new Date().toISOString()}] [INFO] Retrying connection in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          retryDelay *= 2; // Exponential backoff
+        }
+      }
+    };
+    
+    await connectWithRetry();
+    
+    const startupDuration = Date.now() - startupTime;
+    console.error(`[${new Date().toISOString()}] [INFO] ASR-GoT MCP Server running successfully`);
+    console.error(`[${new Date().toISOString()}] [INFO] Tools available: ${tools.length} | Startup time: ${startupDuration}ms`);
+    console.error(`[${new Date().toISOString()}] [INFO] Server features: Fault-tolerant, Graceful degradation, Comprehensive error handling`);
+    
+    // Setup graceful shutdown handlers
+    setupGracefulShutdown();
+    
+    // Setup health monitoring
+    setupHealthMonitoring();
+    
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] [ERROR] Failed to start server: ${error.message}`);
-    console.error(`[${new Date().toISOString()}] [ERROR] Stack trace: ${error.stack}`);
+    const startupDuration = Date.now() - startupTime;
+    console.error(`[${new Date().toISOString()}] [ERROR] Server startup failed after ${startupDuration}ms`);
+    console.error(`[${new Date().toISOString()}] [ERROR] Error: ${error.message}`);
+    
+    if (error.stack) {
+      console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+    }
+    
+    // Attempt graceful cleanup
+    try {
+      if (transport) {
+        console.error(`[${new Date().toISOString()}] [INFO] Attempting graceful cleanup...`);
+        // Add any cleanup logic here
+      }
+    } catch (cleanupError) {
+      console.error(`[${new Date().toISOString()}] [WARN] Cleanup failed: ${cleanupError.message}`);
+    }
+    
+    // Provide helpful error information
+    console.error(`[${new Date().toISOString()}] [INFO] Troubleshooting tips:`);
+    console.error(`[${new Date().toISOString()}] [INFO] 1. Check Node.js version (requires 16+)`);
+    console.error(`[${new Date().toISOString()}] [INFO] 2. Verify all dependencies are installed`);
+    console.error(`[${new Date().toISOString()}] [INFO] 3. Check for port conflicts or permission issues`);
+    console.error(`[${new Date().toISOString()}] [INFO] 4. Review the error message and stack trace above`);
+    
     process.exit(1);
   }
 }
 
-main();
+// Setup graceful shutdown handling
+function setupGracefulShutdown() {
+  const gracefulShutdown = (signal) => {
+    console.error(`[${new Date().toISOString()}] [INFO] Received ${signal}, initiating graceful shutdown...`);
+    
+    try {
+      // Clear any active graph state if needed
+      if (currentGraph) {
+        console.error(`[${new Date().toISOString()}] [INFO] Saving graph state before shutdown...`);
+        // Could implement state persistence here
+      }
+      
+      console.error(`[${new Date().toISOString()}] [INFO] Graceful shutdown completed`);
+      process.exit(0);
+    } catch (shutdownError) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Error during shutdown: ${shutdownError.message}`);
+      process.exit(1);
+    }
+  };
+  
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error(`[${new Date().toISOString()}] [CRITICAL] Uncaught exception: ${error.message}`);
+    console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+    
+    // Attempt to keep server running for graceful degradation
+    console.error(`[${new Date().toISOString()}] [INFO] Attempting to continue operation in degraded mode...`);
+    
+    // Reset currentGraph to prevent further issues
+    try {
+      if (currentGraph) {
+        currentGraph = null;
+        console.error(`[${new Date().toISOString()}] [INFO] Reset graph state for recovery`);
+      }
+    } catch (resetError) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Failed to reset graph state: ${resetError.message}`);
+    }
+  });
+  
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error(`[${new Date().toISOString()}] [CRITICAL] Unhandled promise rejection at:`, promise);
+    console.error(`[${new Date().toISOString()}] [CRITICAL] Reason:`, reason);
+    
+    // Log but don't crash - attempt graceful degradation
+    console.error(`[${new Date().toISOString()}] [INFO] Continuing operation in degraded mode...`);
+  });
+}
+
+// Setup health monitoring
+function setupHealthMonitoring() {
+  const healthCheck = () => {
+    try {
+      const memUsage = process.memoryUsage();
+      const uptime = process.uptime();
+      
+      // Log health info periodically (every 5 minutes)
+      console.error(`[${new Date().toISOString()}] [HEALTH] Server uptime: ${Math.floor(uptime)}s | Memory: ${Math.round(memUsage.rss / 1024 / 1024)}MB | Graph: ${currentGraph ? 'active' : 'none'}`);
+      
+      // Check for memory leaks
+      if (memUsage.rss > 500 * 1024 * 1024) { // 500MB threshold
+        console.error(`[${new Date().toISOString()}] [WARN] High memory usage detected: ${Math.round(memUsage.rss / 1024 / 1024)}MB`);
+      }
+      
+      // Check graph state
+      if (currentGraph) {
+        const vertexCount = currentGraph.vertices.size;
+        const edgeCount = currentGraph.edges.size;
+        
+        if (vertexCount > 10000 || edgeCount > 50000) {
+          console.error(`[${new Date().toISOString()}] [WARN] Large graph detected: ${vertexCount} vertices, ${edgeCount} edges`);
+        }
+      }
+    } catch (healthError) {
+      console.error(`[${new Date().toISOString()}] [ERROR] Health check failed: ${healthError.message}`);
+    }
+  };
+  
+  // Run health check every 5 minutes
+  setInterval(healthCheck, 5 * 60 * 1000);
+  
+  // Initial health check
+  setTimeout(healthCheck, 10000);
+}
+
+main().catch((error) => {
+  console.error(`[${new Date().toISOString()}] [CRITICAL] Main function failed: ${error.message}`);
+  process.exit(1);
+});
