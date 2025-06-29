@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Server](https://img.shields.io/badge/MCP-Server-blue.svg)](https://modelcontextprotocol.io/)
-[![Research-Quest](https://img.shields.io/badge/Framework-ASR--GoT-green.svg)]()
+[![Research-Quest](https://img.shields.io/badge/Framework-Research-Quest-green.svg)]()
 
 
 **Research-Quest**
