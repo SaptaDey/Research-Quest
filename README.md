@@ -1,10 +1,10 @@
-# Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT) MCP Server
+# Research Quest
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Server](https://img.shields.io/badge/MCP-Server-blue.svg)](https://modelcontextprotocol.io/)
 [![ASR-GoT](https://img.shields.io/badge/Framework-ASR--GoT-green.svg)]()
-[![smithery badge](https://smithery.ai/badge/@SaptaDey/scientific-research-claude-extension)](https://smithery.ai/server/@SaptaDey/scientific-research-claude-extension)
+
 
 **Advanced Scientific Reasoning - Graph of Thoughts**
 
