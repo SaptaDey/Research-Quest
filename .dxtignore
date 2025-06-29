@@ -1,0 +1,35 @@
+# Development files
+server/test-server.js
+server/debug-server.js
+server/index.js.backup
+SUBMISSION_SUMMARY.md
+GITHUB_SUBMISSION_GUIDE.md
+
+# Test files that aren't essential for runtime
+server/test.js
+
+# Development tools
+.github/
+.claude/
+
+# Cache and logs
+*.log
+*.cache
+.tmp/
+temp/
+
+# Development dependencies (keep only production dependencies)
+server/node_modules/.cache/
+server/node_modules/*/test/
+server/node_modules/*/tests/
+server/node_modules/*/spec/
+server/node_modules/*/docs/
+server/node_modules/*/examples/
+server/node_modules/*/benchmark/
+server/node_modules/*/coverage/
+
+# Documentation markdown (except README and main docs)
+CONTRIBUTING.md
+
+# Git files
+.git*

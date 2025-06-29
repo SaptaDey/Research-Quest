@@ -1,0 +1,43 @@
+{
+  "name": "asr-got-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --inspect index.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "mcp",
+    "desktop-extension",
+    "dxt",
+    "scientific-reasoning",
+    "graph-theory",
+    "research-methodology",
+    "hypothesis-generation",
+    "evidence-integration",
+    "causal-inference",
+    "bayesian-analysis",
+    "interdisciplinary-research",
+    "knowledge-graphs",
+    "academic-research",
+    "immunology",
+    "dermatology",
+    "machine-learning",
+    "claude-extension"
+  ],
+  "author": "Dr. Saptaswa Dey <saptaswa.dey@medunigraz.at>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "uuid": "^10.0.0",
+    "lodash": "^4.17.21",
+    "mathjs": "^12.4.0",
+    "js-yaml": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

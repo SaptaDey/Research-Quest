@@ -1,0 +1,29 @@
+{
+  "dxt_version": "0.1",
+  "name": "simple-asr-got",
+  "display_name": "Simple ASR-GoT Test",
+  "version": "1.0.0",
+  "description": "Simple test for ASR-GoT MCP server",
+  "author": {
+    "name": "Dr. Saptaswa Dey"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"]
+    }
+  },
+  "tools": [
+    {
+      "name": "test_tool",
+      "description": "Simple test tool for ASR-GoT"
+    }
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "node": ">=18.0.0"
+  }
+}

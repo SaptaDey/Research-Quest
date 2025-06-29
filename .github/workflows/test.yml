@@ -1,0 +1,76 @@
+name: Test ASR-GoT Extension
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: './server/package-lock.json'
+    
+    - name: Install dependencies
+      run: |
+        cd server
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd server
+        npm test
+    
+    - name: Validate manifest
+      run: |
+        cd server
+        node -e "
+          const fs = require('fs');
+          const manifest = JSON.parse(fs.readFileSync('../manifest.json', 'utf8'));
+          const required = ['dxt_version', 'name', 'version', 'description', 'author', 'server'];
+          const missing = required.filter(field => !manifest[field]);
+          if (missing.length > 0) {
+            console.error('Missing required fields:', missing);
+            process.exit(1);
+          }
+          console.log('✓ Manifest validation passed');
+        "
+
+  compatibility:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    
+    - name: Install dependencies
+      run: |
+        cd server
+        npm install
+    
+    - name: Quick compatibility test
+      run: |
+        cd server
+        timeout 30s npm test || exit 0

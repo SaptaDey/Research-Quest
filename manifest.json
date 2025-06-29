@@ -1,0 +1,177 @@
+{
+  "dxt_version": "0.1",
+  "name": "scientific-reasoning-got",
+  "display_name": "Scientific Reasoning - Graph of Thoughts",
+  "version": "1.0.1",
+  "description": "Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT) framework implementing complete 8-stage research methodology with 29 parameters for systematic scientific analysis.",
+  "long_description": "## Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT)\n\nThis extension provides a comprehensive implementation of the ASR-GoT framework, enabling researchers to perform systematic scientific reasoning through an 8-stage graph-based methodology. Designed specifically for Dr. Saptaswa Dey's research in immunology, dermatology, and interdisciplinary scientific analysis.\n\n### Key Features\n- **Complete 8-Stage Pipeline**: Initialization → Decomposition → Hypothesis/Planning → Evidence Integration → Pruning/Merging → Subgraph Extraction → Composition → Reflection\n- **29 Parameters Implementation**: All P1.0-P1.29 parameters from the ASR-GoT specification\n- **Multi-dimensional Confidence Vectors**: 4D confidence representation with Bayesian updates\n- **Causal Inference**: Pearl's do-calculus and counterfactual reasoning\n- **Interdisciplinary Bridge Nodes**: Automatic cross-domain connection detection\n- **Temporal Analysis**: Pattern detection and temporal decay modeling\n- **Bias Detection**: Comprehensive bias identification and mitigation\n- **Statistical Power Analysis**: Sample size, effect size, and power calculations\n\n### Perfect for\n- Hypothesis generation and testing\n- Literature integration and evidence synthesis\n- Causal analysis and pathway mapping\n- Interdisciplinary research connections\n- Knowledge gap identification\n- Research planning and intervention design",
+  "icon": "icon.png",
+  "author": {
+    "name": "Dr. Saptaswa Dey",
+    "email": "saptaswa.dey@medunigraz.at",
+    "url": "https://github.com/SaptaDey"
+  },
+  "repository": {
+    "type": "git", 
+    "url": "https://github.com/SaptaDey/scientific-research-claude-extension"
+  },
+  "homepage": "https://github.com/SaptaDey/scientific-research-claude-extension",
+  "documentation": "https://github.com/SaptaDey/scientific-research-claude-extension/blob/main/README.md",
+  "support": "https://github.com/SaptaDey/scientific-research-claude-extension/issues",
+  "keywords": [
+    "scientific-reasoning",
+    "graph-of-thoughts",
+    "research-methodology", 
+    "hypothesis-generation",
+    "interdisciplinary-research",
+    "causal-inference",
+    "evidence-integration",
+    "academic-research",
+    "biomedical-research",
+    "immunology",
+    "dermatology",
+    "bayesian-analysis",
+    "statistical-power",
+    "bias-detection"
+  ],
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {}
+    }
+  },
+  "tools": [
+    {
+      "name": "initialize_asr_got_graph",
+      "description": "P1.1: Initialize ASR-GoT graph with root node n₀ label='Task Understanding' and complete P1.12 metadata schema"
+    },
+    {
+      "name": "decompose_research_task", 
+      "description": "P1.2: Decompose task into dimension nodes 2.1-2.7 with mandatory Potential Biases and Knowledge Gaps dimensions"
+    },
+    {
+      "name": "generate_hypotheses",
+      "description": "P1.3: Generate k=3-5 hypotheses per dimension with explicit plans and complete P1.8,P1.16,P1.17,P1.28 metadata"
+    },
+    {
+      "name": "get_graph_summary",
+      "description": "Get comprehensive graph summary with P1.11 formalism state, P1.22 topology metrics, and all parameter status"
+    },
+    {
+      "name": "export_graph_data",
+      "description": "P1.6: Export complete graph with reasoning traces, topology insights, and Vancouver citations"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "asr_got_research_assistant",
+      "description": "Dr. Dey's personalized research assistant with formal academic communication style and expertise in immunology, dermatology, and machine learning",
+      "text": "You are Dr. Dey's specialized research assistant with expertise in immunology, dermatology, and machine learning. Communicate in formal academic style using Vancouver citations. Focus on rigorous scientific methodology, interdisciplinary connections, and practical research applications. Always consider bias detection, statistical power, and reproducibility."
+    },
+    {
+      "name": "interdisciplinary_bridge_finder",
+      "description": "Specialized prompt for identifying connections between different research domains and creating interdisciplinary insights",
+      "text": "You are an expert at identifying interdisciplinary connections and creating bridge nodes between different research domains. Focus on finding meaningful connections between immunology, dermatology, computational biology, and machine learning. Highlight novel insights that emerge from cross-domain analysis and suggest collaborative research opportunities."
+    },
+    {
+      "name": "hypothesis_falsification_analyzer",
+      "description": "Focused prompt for evaluating hypothesis falsifiability and designing critical experiments",
+      "text": "You are a scientific methodology expert specializing in hypothesis falsification and critical experiment design. Evaluate hypotheses for falsifiability, suggest specific experimental designs that could refute claims, assess statistical power requirements, and ensure rigorous scientific standards. Focus on creating testable predictions and identifying potential confounders."
+    },
+    {
+      "name": "causal_inference_expert",
+      "description": "Expert system for causal analysis using Pearl's causal hierarchy and counterfactual reasoning",
+      "text": "You are an expert in causal inference using Pearl's causal hierarchy and counterfactual reasoning. Apply do-calculus, identify confounders, assess causal assumptions, and distinguish between association and causation. Focus on directed acyclic graphs (DAGs), intervention design, and causal pathway analysis in biological and medical research contexts."
+    }
+  ],
+  "user_configuration": {
+    "research_domain": {
+      "type": "string",
+      "title": "Primary Research Domain",
+      "description": "Your primary field of research (e.g., immunology, dermatology, machine learning)",
+      "default": "immunology",
+      "required": false
+    },
+    "confidence_threshold": {
+      "type": "number",
+      "title": "Confidence Threshold",
+      "description": "Minimum confidence level for hypothesis consideration (0.0 to 1.0)",
+      "default": 0.2,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    },
+    "max_hypotheses_per_dimension": {
+      "type": "number",
+      "title": "Max Hypotheses per Dimension",
+      "description": "Maximum number of hypotheses to generate per task dimension",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 10,
+      "required": false
+    },
+    "enable_multi_layer_networks": {
+      "type": "boolean",
+      "title": "Enable Multi-Layer Networks",
+      "description": "Use multi-layer network representation for complex systems",
+      "default": true,
+      "required": false
+    },
+    "temporal_decay_factor": {
+      "type": "number",
+      "title": "Temporal Decay Factor",
+      "description": "Factor for temporal decay of evidence impact (0.0 to 1.0)",
+      "default": 0.95,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    },
+    "citation_style": {
+      "type": "string",
+      "title": "Citation Style",
+      "description": "Preferred citation format for research narratives",
+      "default": "vancouver",
+      "enum": ["vancouver", "apa", "harvard", "nature"],
+      "required": false
+    },
+    "research_workspace": {
+      "type": "directory",
+      "title": "Research Workspace Directory",
+      "description": "Directory for storing ASR-GoT graph data and exported files",
+      "required": false
+    },
+    "enable_collaboration_features": {
+      "type": "boolean",
+      "title": "Enable Collaboration Features",
+      "description": "Enable multi-researcher attribution and consensus-building features",
+      "default": false,
+      "required": false
+    },
+    "statistical_power_threshold": {
+      "type": "number",
+      "title": "Statistical Power Threshold",
+      "description": "Minimum statistical power for evidence consideration",
+      "default": 0.8,
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    },
+    "impact_estimation_model": {
+      "type": "string",
+      "title": "Impact Estimation Model",
+      "description": "Model for estimating research impact",
+      "default": "comprehensive",
+      "enum": ["basic", "comprehensive", "domain_specific"],
+      "required": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "node": ">=18.0.0"
+  }
+}

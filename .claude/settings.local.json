@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm test)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(dxt:*)",
+      "Bash(mcp-inspector:*)",
+      "Bash(rm:*)",
+      "Bash(sha256sum:*)",
+      "Bash(cp:*)",
+      "WebFetch(domain:modelcontextprotocol.io)",
+      "WebFetch(domain:modelcontextprotocol.io)",
+      "Bash(npm run build:*)",
+      "Bash(tar:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(true)",
+      "Bash(zip:*)",
+      "Bash(python3:*)",
+      "Bash(echo:*)",
+      "Bash(npm init:*)"
+    ],
+    "deny": []
+  }
+}
