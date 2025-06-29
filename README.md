@@ -4,6 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Server](https://img.shields.io/badge/MCP-Server-blue.svg)](https://modelcontextprotocol.io/)
 [![Research-Quest](https://img.shields.io/badge/Framework-Research--Quest-green.svg)]()
+[![smithery badge](https://smithery.ai/badge/@SaptaDey/research-quest)](https://smithery.ai/server/@SaptaDey/research-quest)
 
 
 **Research-Quest**
