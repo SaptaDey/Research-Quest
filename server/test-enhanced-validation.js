@@ -354,16 +354,24 @@ class EnhancedValidationTestSuite {
     try {
       const response = await this.sendMCPRequest(request);
       
-      if (response.result) {
-        const result = JSON.parse(response.result.content[0].text);
-        if (result.warnings && result.warnings.length > 0) {
-          console.log('✓ Generates warnings for missing P1.3 and P1.16 required fields');
-          console.log(`  Warnings: ${result.warnings.join(', ')}`);
-          this.testResults.push({ test: 'required_field_warnings', passed: true });
-        } else {
-          console.log('✗ Should generate warnings for missing required fields');
-          this.testResults.push({ test: 'required_field_warnings', passed: false });
+      if (response.result?.content?.[0]?.text) {
+        try {
+          const result = JSON.parse(response.result.content[0].text);
+          if (result.warnings && Array.isArray(result.warnings) && result.warnings.length > 0) {
+            console.log('✓ Generates warnings for missing P1.3 and P1.16 required fields');
+            console.log(`  Warnings: ${result.warnings.join(', ')}`);
+            this.testResults.push({ test: 'required_field_warnings', passed: true });
+          } else {
+            console.log('✗ Should generate warnings for missing required fields');
+            this.testResults.push({ test: 'required_field_warnings', passed: false });
+          }
+        } catch (parseError) {
+          console.log(`✗ Failed to parse response: ${parseError.message}`);
+          this.testResults.push({ test: 'required_field_warnings', passed: false, error: 'Parse error' });
         }
+      } else {
+        console.log('✗ Invalid response format');
+        this.testResults.push({ test: 'required_field_warnings', passed: false, error: 'Invalid response format' });
       }
     } catch (error) {
       console.log(`✗ Unexpected error: ${error.message}`);
