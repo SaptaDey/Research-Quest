@@ -163,7 +163,7 @@ class EnhancedValidationTestSuite {
       if (response.error && response.error.code === -32602) {
         console.log('✓ Now correctly validates confidence value ranges');
         console.log(`  Error message: ${response.error.message}`);
-        if (response.error.data && response.error.data.examples) {
+        if (response.error.data?.examples) {
           console.log(`  Examples provided: ${JSON.stringify(response.error.data.examples)}`);
         }
         this.testResults.push({ test: 'confidence_range_validation', passed: true });
