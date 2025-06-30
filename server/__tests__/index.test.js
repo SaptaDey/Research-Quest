@@ -36,7 +36,7 @@ describe('Server Application', () => {
 
   afterAll(async () => {
     // Cleanup after all tests
-    if (app && app.close) {
+    if (app?.close) {
       await app.close();
     }
   });
