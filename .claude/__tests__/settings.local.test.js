@@ -249,8 +249,8 @@ describe('Settings Local Configuration', () => {
       const originalEnv = process.env;
       
       // Remove environment variables
-      delete process.env.CLAUDE_API_KEY;
-      delete process.env.CLAUDE_DEBUG;
+      process.env.CLAUDE_API_KEY = undefined;
+      process.env.CLAUDE_DEBUG = undefined;
       
       expect(process.env.CLAUDE_API_KEY).toBeUndefined();
       expect(process.env.CLAUDE_DEBUG).toBeUndefined();
