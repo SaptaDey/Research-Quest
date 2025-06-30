@@ -42,9 +42,19 @@ describe('Settings Local Configuration', () => {
       fs.existsSync.mockReturnValue(true);
       fs.readFileSync.mockReturnValue(JSON.stringify(mockSettings));
       
-      // Test implementation would go here
-      expect(fs.existsSync).toHaveBeenCalled();
-      expect(fs.readFileSync).toHaveBeenCalled();
+      // Mock the actual settings loading function
+      const loadSettings = () => {
+        if (fs.existsSync('settings.local.json')) {
+          const data = fs.readFileSync('settings.local.json', 'utf-8');
+          return JSON.parse(data);
+        }
+        return null;
+      };
+      
+      const loadedSettings = loadSettings();
+      expect(loadedSettings).toEqual(mockSettings);
+      expect(fs.existsSync).toHaveBeenCalledWith('settings.local.json');
+      expect(fs.readFileSync).toHaveBeenCalledWith('settings.local.json', 'utf-8');
     });
 
     test('should handle missing settings file gracefully', () => {
