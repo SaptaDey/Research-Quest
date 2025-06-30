@@ -221,7 +221,7 @@ class EnhancedValidationTestSuite {
       if (response.error && response.error.code === -32602) {
         console.log('✓ Correctly validates node existence');
         console.log(`  Error message: ${response.error.message}`);
-        if (response.error.data && response.error.data.examples) {
+        if (response.error.data?.examples) {
           console.log(`  Available nodes: ${JSON.stringify(response.error.data.examples)}`);
         }
         this.testResults.push({ test: 'invalid_node_reference', passed: true });
