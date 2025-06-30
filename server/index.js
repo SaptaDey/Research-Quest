@@ -138,8 +138,7 @@ class ASRGoTGraph {
         try {
           return obj && obj.hasOwnProperty(prop) ? obj[prop] : fallback;
         } catch (error) {
-          console.error(`[${new Date().toISOString()}] [WARN] Error accessing property ${prop}: ${error.message}`);
-          return fallback;
+          return obj && obj.hasOwnProperty(prop) ? obj[prop] : fallback;
         }
       };
 
