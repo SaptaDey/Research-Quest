@@ -243,6 +243,10 @@ describe('Scientific Research GoT Module', () => {
       
       // Simple correlation calculation (Pearson)
       const calculateCorrelation = (x, y) => {
+        if (!Array.isArray(x) || !Array.isArray(y)) return 0;
+        if (x.length !== y.length || x.length === 0) return 0;
+        if (!x.every(val => typeof val === 'number') || !y.every(val => typeof val === 'number')) return 0;
+
         const n = x.length;
         const sumX = x.reduce((a, b) => a + b, 0);
         const sumY = y.reduce((a, b) => a + b, 0);
