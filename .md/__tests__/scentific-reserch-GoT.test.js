@@ -1,9 +1,11 @@
-const { describe, it, expect, beforeEach, afterEach, jest } = require('@jest/globals');
++const ScientificResearchGoT = require('../scientific-research-got');
++const { processResearchData, analyzeCharacters, calculateStatistics } = ScientificResearchGoT;
++
+ const { describe, it, expect, beforeEach, afterEach, jest } = require('@jest/globals');
 
 // Unit tests for Scientific Research GoT Module
 // Testing Framework: Jest
 // This module appears to handle scientific research analysis related to Game of Thrones data
-
 describe('Scientific Research GoT Module', () => {
   let mockModule;
   
