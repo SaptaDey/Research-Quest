@@ -2,16 +2,25 @@
 # Stage 1: Install dependencies
 FROM node:lts-alpine AS builder
 WORKDIR /app
-COPY server/package*.json ./
-RUN npm ci --ignore-scripts
+
+
+# Copy package files
+COPY server/package.json server/package-lock.json ./
+
+# Install dependencies with clean cache
+RUN npm ci --ignore-scripts --cache /tmp/.npm
+
 
 # Stage 2: Build runtime image
 FROM node:lts-alpine
 WORKDIR /app
+
 # Copy node modules
 COPY --from=builder /app/node_modules ./node_modules
+
 # Copy server source
-COPY server/ ./server
+COPY server/ ./server/
+
 
 # Ensure index is executable
 RUN chmod +x server/index.js
