@@ -233,7 +233,7 @@ class FaultToleranceTestSuite {
     try {
       const response = await this.sendMCPRequest(request);
       
-      if (response.error && response.error.message.includes('not found')) {
+      if (response.error?.message.includes('not found')) {
         console.log('✓ Properly handles non-existent node access');
         this.testResults.push({ test: 'nonexistent_node_error', passed: true });
       } else {
