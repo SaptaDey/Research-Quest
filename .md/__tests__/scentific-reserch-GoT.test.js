@@ -92,6 +92,9 @@ describe('Scientific Research GoT Module', () => {
       const sanitize = (str) => {
         if (typeof str !== 'string') return str;
         return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                 .replace(/<[^>]*>/g, '')           // Remove all HTML tags
+                 .replace(/javascript:/gi, '')      // Remove javascript: protocol
+                 .replace(/on\w+\s*=/gi, '')        // Remove event handlers
                  .replace(/['"`;]/g, '');
       };
       
