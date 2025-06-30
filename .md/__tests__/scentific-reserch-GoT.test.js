@@ -210,7 +210,7 @@ describe('Scientific Research GoT Module', () => {
         expect(deathRate).toBeGreaterThan(0);
         expect(deathRate).toBeLessThan(1);
         expect(typeof deathRate).toBe('number');
-        expect(isFinite(deathRate)).toBe(true);
+        expect(Number.isFinite(deathRate)).toBe(true);
       });
     });
 
@@ -223,7 +223,7 @@ describe('Scientific Research GoT Module', () => {
         invalidSeasonData.deaths / invalidSeasonData.totalCharacters : 0;
       
       expect(safeDeathRate).toBe(0);
-      expect(isFinite(safeDeathRate)).toBe(true);
+      expect(Number.isFinite(safeDeathRate)).toBe(true);
     });
 
     it('should calculate correlation coefficients correctly', () => {
