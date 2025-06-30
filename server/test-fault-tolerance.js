@@ -102,7 +102,7 @@ class FaultToleranceTestSuite {
     try {
       const response = await this.sendMCPRequest(request1);
       
-      if (response.error && response.error.message.includes('task_description')) {
+      if (response.error?.message.includes('task_description')) {
         console.log('✓ Properly handles invalid task description');
         this.testResults.push({ test: 'invalid_task_description', passed: true });
       } else {
@@ -233,7 +233,7 @@ class FaultToleranceTestSuite {
     try {
       const response = await this.sendMCPRequest(request);
       
-      if (response.error && response.error.message.includes('not found')) {
+      if (response.error?.message.includes('not found')) {
         console.log('✓ Properly handles non-existent node access');
         this.testResults.push({ test: 'nonexistent_node_error', passed: true });
       } else {
@@ -268,7 +268,7 @@ class FaultToleranceTestSuite {
       
       if (response.result) {
         const result = JSON.parse(response.result.content[0].text);
-        if (!result.success && result.error && result.error.includes('stage')) {
+        if (!result.success && result.error?.includes('stage')) {
           console.log('✓ Properly handles wrong stage operations');
           this.testResults.push({ test: 'wrong_stage_error', passed: true });
         } else {

@@ -3,11 +3,13 @@
 FROM node:lts-alpine AS builder
 WORKDIR /app
 
+
 # Copy package files
 COPY server/package.json server/package-lock.json ./
 
 # Install dependencies with clean cache
 RUN npm ci --ignore-scripts --cache /tmp/.npm
+
 
 # Stage 2: Build runtime image
 FROM node:lts-alpine
@@ -18,6 +20,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # Copy server source
 COPY server/ ./server/
+
 
 # Ensure index is executable
 RUN chmod +x server/index.js
