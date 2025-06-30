@@ -28,7 +28,8 @@
       "Bash(python3:*)",
       "Bash(echo:*)",
       "Bash(npm init:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(docker build:*)"
     ],
     "deny": []
   }
