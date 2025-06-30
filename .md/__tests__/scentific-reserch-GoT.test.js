@@ -624,9 +624,13 @@ describe('Scientific Research GoT Module', () => {
       const maliciousInput = '<script>alert("xss")</script><img src="x" onerror="alert(1)">';
       
       const sanitizeHTML = (input) => {
-        return input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                   .replace(/<[^>]*>/g, '')
-                   .replace(/javascript:/gi, '');
+        return input
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<[^>]*>/g, '') // Remove all HTML tags
+          .replace(/javascript:/gi, '') // Remove javascript protocol
+          .replace(/data:/gi, '') // Remove data URIs
+          .replace(/vbscript:/gi, '') // Remove vbscript protocol
+          .replace(/on\w+\s*=/gi, ''); // Remove event handlers
       };
       
       const sanitized = sanitizeHTML(maliciousInput);
