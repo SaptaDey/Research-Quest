@@ -46,9 +46,11 @@
   },
   "tools": [
     {
-      "name": "initialize_research_quest_graph",
-      "description": "Initialize Research-Quest graph with root node for systematic scientific reasoning"
-    },
+// in server/index.js (around line ~1760 in your switch(toolName) dispatcher)
+-      case 'initialize_asr_got_graph':
++      case 'initialize_research_quest_graph':
+         // …handler logic…
+         break;
     {
       "name": "decompose_research_task", 
       "description": "P1.2: Decompose task into dimension nodes 2.1-2.7 with mandatory Potential Biases and Knowledge Gaps dimensions"
