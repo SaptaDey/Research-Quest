@@ -1,7 +1,7 @@
 {
-  "name": "asr-got-mcp-server",
+  "name": "research-quest-mcp-server",
   "version": "1.0.0",
-  "description": "MCP Server for Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT)",
+  "description": "MCP Server for Research-Quest - Leverage graph structures to transform how AI systems approach scientific reasoning",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -13,8 +13,8 @@
     "mcp",
     "desktop-extension",
     "dxt",
-    "scientific-reasoning",
-    "graph-theory",
+    "research-quest",
+    "graph-structures",
     "research-methodology",
     "hypothesis-generation",
     "evidence-integration",
@@ -26,7 +26,7 @@
     "immunology",
     "dermatology",
     "machine-learning",
-    "claude-extension"
+    "scientific-reasoning"
   ],
   "author": "Dr. Saptaswa Dey <saptaswa.dey@medunigraz.at>",
   "license": "MIT",
