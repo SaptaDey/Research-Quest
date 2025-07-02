@@ -585,7 +585,7 @@ flowchart TD
 
 | 🚀 **Method** | 💻 **Command** | ⏱️ **Time** |
 |---------------|----------------|-------------|
-| **Smithery** | `npx @smithery/cli install @SaptaDey/research-quest --client claude` | 2 mins |
+| **Smithery** | `npx -y @smithery/cli install @SaptaDey/research-quest --client claude` | 2 mins |
 | **Git Clone** | `git clone https://github.com/SaptaDey/Research-Quest.git` | 5 mins |
 | **Docker** | `docker run research-quest:latest` | 3 mins |
 
@@ -1487,4 +1487,3 @@ If you use this extension in your research, please cite:
 ---
 
 **Built for systematic scientific reasoning. Designed for discovery.**
-
