@@ -18,6 +18,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { v4 as uuidv4 } from 'uuid';
 
+
 // Research-Quest Graph State Management - Production Implementation
 class ResearchQuestGraph {
   constructor(config = {}) {
@@ -122,12 +123,12 @@ class ResearchQuestGraph {
     try {
       // Validate input
       if (baseMetadata === null || baseMetadata === undefined) {
-        console.error(`[${new Date().toISOString()}] [WARN] Null/undefined baseMetadata, using empty object`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Null/undefined baseMetadata, using empty object`);
         baseMetadata = {};
       }
       
       if (typeof baseMetadata !== 'object') {
-        console.error(`[${new Date().toISOString()}] [WARN] Invalid baseMetadata type: ${typeof baseMetadata}, using empty object`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Invalid baseMetadata type: ${typeof baseMetadata}, using empty object`);
         baseMetadata = {};
       }
 
@@ -138,8 +139,7 @@ class ResearchQuestGraph {
         try {
           return obj && obj.hasOwnProperty(prop) ? obj[prop] : fallback;
         } catch (error) {
-          console.error(`[${new Date().toISOString()}] [WARN] Error accessing property ${prop}: ${error.message}`);
-          return fallback;
+          return obj && obj.hasOwnProperty(prop) ? obj[prop] : fallback;
         }
       };
 
@@ -169,7 +169,7 @@ class ResearchQuestGraph {
         ...this._sanitizeAdditionalMetadata(baseMetadata)
       };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Failed to create node metadata: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Failed to create node metadata: ${error.message}`);
       // Return minimal valid metadata
       return {
         node_id: uuidv4(),
@@ -197,7 +197,7 @@ class ResearchQuestGraph {
   _validateImpactScore(score) {
     const num = Number(score);
     if (isNaN(num) || num < 0 || num > 1) {
-      console.error(`[${new Date().toISOString()}] [WARN] Invalid impact score ${score}, using 0.5`);
+      logger.error(`[${new Date().toISOString()}] [WARN] Invalid impact score ${score}, using 0.5`);
       return 0.5;
     }
     return num;
@@ -219,7 +219,7 @@ class ResearchQuestGraph {
       }
       return sanitized;
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [WARN] Error sanitizing metadata: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [WARN] Error sanitizing metadata: ${error.message}`);
       return {};
     }
   }
@@ -229,7 +229,7 @@ class ResearchQuestGraph {
     try {
       // Validate input
       if (!Array.isArray(means)) {
-        console.error(`[${new Date().toISOString()}] [WARN] Invalid means array, using default: ${means}`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Invalid means array, using default: ${means}`);
         means = [0.5, 0.5, 0.5, 0.5];
       }
       
@@ -237,7 +237,7 @@ class ResearchQuestGraph {
       const validMeans = means.map(m => {
         const num = Number(m);
         if (isNaN(num) || num < 0 || num > 1) {
-          console.error(`[${new Date().toISOString()}] [WARN] Invalid confidence value ${m}, using 0.5`);
+          logger.error(`[${new Date().toISOString()}] [WARN] Invalid confidence value ${m}, using 0.5`);
           return 0.5;
         }
         return num;
@@ -252,7 +252,7 @@ class ResearchQuestGraph {
         confidence_interval: 0.95
       };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Failed to create probability distribution: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Failed to create probability distribution: ${error.message}`);
       // Return default distribution
       return {
         type: 'probability_distribution',
@@ -319,7 +319,7 @@ class ResearchQuestGraph {
 
       // Check if already initialized
       if (this.vertices.size > 0) {
-        console.error(`[${new Date().toISOString()}] [WARN] Graph already has ${this.vertices.size} vertices, reinitializing`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Graph already has ${this.vertices.size} vertices, reinitializing`);
         // Clear existing state for reinitialization
         this.vertices.clear();
         this.edges.clear();
@@ -342,7 +342,7 @@ class ResearchQuestGraph {
       // Validate configuration
       const safeConfig = this._validateConfig(config);
 
-      console.error(`[${new Date().toISOString()}] [INFO] Stage 1: Initializing ASR-GoT graph - P1.1`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Stage 1: Initializing ASR-GoT graph - P1.1`);
       
       // P1.1: Create root node n₀ with exact specification and error handling
       const rootNodeMetadata = this._createNodeMetadata({
@@ -373,7 +373,7 @@ class ResearchQuestGraph {
       if (this.layers.has('base')) {
         this.layers.get('base').nodes.add('n0');
       } else {
-        console.error(`[${new Date().toISOString()}] [WARN] Base layer not found, creating default`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Base layer not found, creating default`);
         this._initializeLayerStructure();
         this.layers.get('base').nodes.add('n0');
       }
@@ -381,7 +381,7 @@ class ResearchQuestGraph {
       this.metadata.stage = 'initialization';
       this.currentStage = 1;
       
-      console.error(`[${new Date().toISOString()}] [INFO] Root node n₀ created following P1.1 specification exactly`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Root node n₀ created following P1.1 specification exactly`);
       
       return {
         success: true,
@@ -393,7 +393,7 @@ class ResearchQuestGraph {
         warnings: this._getInitializationWarnings()
       };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Initialization failed: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Initialization failed: ${error.message}`);
       
       // Attempt graceful recovery
       try {
@@ -406,7 +406,7 @@ class ResearchQuestGraph {
           recovery_attempted: true
         };
       } catch (recoveryError) {
-        console.error(`[${new Date().toISOString()}] [CRITICAL] Recovery failed: ${recoveryError.message}`);
+        logger.error(`[${new Date().toISOString()}] [CRITICAL] Recovery failed: ${recoveryError.message}`);
         return {
           success: false,
           error: error.message,
@@ -658,7 +658,7 @@ class ResearchQuestGraph {
         
         safeConfig.disciplinary_tags = config.disciplinary_tags.filter(tag => {
           if (typeof tag !== 'string' || tag.trim().length === 0) {
-            console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag: ${tag}`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag: ${tag}`);
             return false;
           }
           return true;
@@ -678,7 +678,7 @@ class ResearchQuestGraph {
         
         safeConfig.attribution = config.attribution.filter(attr => {
           if (typeof attr !== 'string' || attr.trim().length === 0) {
-            console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution: ${attr}`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution: ${attr}`);
             return false;
           }
           return true;
@@ -688,7 +688,7 @@ class ResearchQuestGraph {
       // Validate enable_multi_layer
       if (config.enable_multi_layer !== undefined) {
         if (typeof config.enable_multi_layer !== 'boolean') {
-          console.error(`[${new Date().toISOString()}] [WARN] enable_multi_layer must be boolean, using default`);
+          logger.error(`[${new Date().toISOString()}] [WARN] enable_multi_layer must be boolean, using default`);
         } else {
           safeConfig.enable_multi_layer = config.enable_multi_layer;
         }
@@ -699,7 +699,7 @@ class ResearchQuestGraph {
       if (error instanceof McpError) {
         throw error;
       }
-      console.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
       return {};
     }
   }
@@ -748,7 +748,7 @@ class ResearchQuestGraph {
       throw new Error(`Cannot decompose. Current stage: ${this.currentStage}, expected: 1`);
     }
 
-    console.error(`[${new Date().toISOString()}] [INFO] Stage 2: Task decomposition - P1.2`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Stage 2: Task decomposition - P1.2`);
 
     // P1.2: EXACT default dimensions as specified
     const defaultDimensions = [
@@ -808,7 +808,7 @@ class ResearchQuestGraph {
     this.currentStage = 2;
     this.metadata.stage = 'decomposition';
     
-    console.error(`[${new Date().toISOString()}] [INFO] Created dimension nodes ${dimensionNodes.join(', ')} with P1.2 exact compliance`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Created dimension nodes ${dimensionNodes.join(', ')} with P1.2 exact compliance`);
 
     return {
       success: true,
@@ -859,7 +859,7 @@ class ResearchQuestGraph {
       // Validate config
       const safeConfig = this._validateHypothesisConfig(config);
 
-      console.error(`[${new Date().toISOString()}] [INFO] Stage 3: Generating hypotheses for ${dimensionNodeId} - P1.3`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Stage 3: Generating hypotheses for ${dimensionNodeId} - P1.3`);
 
       // P1.3: Generate k=3-5 hypotheses per dimension
       const maxHypotheses = Math.min(safeConfig.max_hypotheses || 5, 5); // P1.3 specification
@@ -915,7 +915,7 @@ class ResearchQuestGraph {
           if (this.layers.has('theoretical')) {
             this.layers.get('theoretical').nodes.add(nodeId);
           } else {
-            console.error(`[${new Date().toISOString()}] [WARN] Theoretical layer not found, adding to base layer`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Theoretical layer not found, adding to base layer`);
             this.layers.get('base').nodes.add(nodeId);
           }
 
@@ -936,7 +936,7 @@ class ResearchQuestGraph {
 
           hypothesisNodes.push(nodeId);
         } catch (hypothesisError) {
-          console.error(`[${new Date().toISOString()}] [ERROR] Failed to create hypothesis ${index + 1}: ${hypothesisError.message}`);
+          logger.error(`[${new Date().toISOString()}] [ERROR] Failed to create hypothesis ${index + 1}: ${hypothesisError.message}`);
           errors.push(`Hypothesis ${index + 1}: ${hypothesisError.message}`);
           // Continue with other hypotheses
         }
@@ -950,7 +950,7 @@ class ResearchQuestGraph {
       this.currentStage = 3;
       this.metadata.stage = 'hypothesis_planning';
       
-      console.error(`[${new Date().toISOString()}] [INFO] Generated hypotheses ${hypothesisNodes.join(', ')} with P1.3 exact compliance`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Generated hypotheses ${hypothesisNodes.join(', ')} with P1.3 exact compliance`);
 
       return {
         success: true,
@@ -962,7 +962,7 @@ class ResearchQuestGraph {
         warnings: errors.length > 0 ? [`${errors.length} hypotheses failed to create`] : undefined
       };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${error.message}`);
       
       // Attempt partial recovery
       return {
@@ -988,7 +988,7 @@ class ResearchQuestGraph {
           if (!isNaN(maxHyp) && maxHyp > 0 && maxHyp <= 5) {
             safeConfig.max_hypotheses = Math.floor(maxHyp);
           } else {
-            console.error(`[${new Date().toISOString()}] [WARN] Invalid max_hypotheses: ${config.max_hypotheses}, using default 5`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Invalid max_hypotheses: ${config.max_hypotheses}, using default 5`);
             safeConfig.max_hypotheses = 5;
           }
         }
@@ -996,7 +996,7 @@ class ResearchQuestGraph {
       
       return safeConfig;
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Config validation failed: ${error.message}`);
       return { max_hypotheses: 5 };
     }
   }
@@ -1016,7 +1016,7 @@ class ResearchQuestGraph {
         }
         
         // For string hypotheses, we need to add required fields as warnings
-        console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} provided as string. P1.3 and P1.16 require explicit plan and falsification criteria. Adding defaults.`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} provided as string. P1.3 and P1.16 require explicit plan and falsification criteria. Adding defaults.`);
         
         return { 
           content: hypothesis.trim(),
@@ -1045,7 +1045,7 @@ class ResearchQuestGraph {
           try {
             validated.confidence = this._validateConfidenceArray(hypothesis.confidence, `hypotheses[${index}].confidence`);
           } catch (error) {
-            console.error(`[${new Date().toISOString()}] [WARN] Invalid confidence in hypothesis ${index + 1}: ${error.message}, using defaults`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Invalid confidence in hypothesis ${index + 1}: ${error.message}, using defaults`);
           }
         }
 
@@ -1061,7 +1061,7 @@ class ResearchQuestGraph {
           }
           validated.falsification_criteria = hypothesis.falsification_criteria.trim();
         } else {
-          console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing falsification_criteria (P1.16 requirement). This may affect hypothesis quality assessment.`);
+          logger.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing falsification_criteria (P1.16 requirement). This may affect hypothesis quality assessment.`);
           validated._needs_falsification_criteria = true;
         }
 
@@ -1088,7 +1088,7 @@ class ResearchQuestGraph {
           
           validated.plan = hypothesis.plan;
         } else {
-          console.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing plan (P1.3 requirement). Adding default plan.`);
+          logger.error(`[${new Date().toISOString()}] [WARN] Hypothesis ${index + 1} missing plan (P1.3 requirement). Adding default plan.`);
           validated._needs_plan = true;
         }
 
@@ -1118,7 +1118,7 @@ class ResearchQuestGraph {
           }
           validated.disciplinary_tags = hypothesis.disciplinary_tags.filter(tag => {
             if (typeof tag !== 'string' || tag.trim().length === 0) {
-              console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag in hypothesis ${index + 1}: ${tag}`);
+              logger.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid disciplinary tag in hypothesis ${index + 1}: ${tag}`);
               return false;
             }
             return true;
@@ -1137,7 +1137,7 @@ class ResearchQuestGraph {
           }
           validated.attribution = hypothesis.attribution.filter(attr => {
             if (typeof attr !== 'string' || attr.trim().length === 0) {
-              console.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution in hypothesis ${index + 1}: ${attr}`);
+              logger.error(`[${new Date().toISOString()}] [WARN] Ignoring invalid attribution in hypothesis ${index + 1}: ${attr}`);
               return false;
             }
             return true;
@@ -1157,7 +1157,7 @@ class ResearchQuestGraph {
       if (error instanceof McpError) {
         throw error;
       }
-      console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis validation failed for index ${index}: ${error.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Hypothesis validation failed for index ${index}: ${error.message}`);
       throw new McpError(ErrorCode.InvalidParams, `Hypothesis ${index + 1} validation failed: ${error.message}`);
     }
   }
@@ -1731,7 +1731,7 @@ const server = new Server(
 
 // Handle tool listing
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  console.error(`[${new Date().toISOString()}] [INFO] Tools requested - ${tools.length} ASR-GoT tools available (exact specification compliance)`);
+  logger.error(`[${new Date().toISOString()}] [INFO] Tools requested - ${tools.length} ASR-GoT tools available (exact specification compliance)`);
   return { tools: tools };
 });
 
@@ -1741,7 +1741,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const requestId = request.id;
   const startTime = Date.now();
 
-  console.error(`[${new Date().toISOString()}] [INFO] Tool call: ${name} (request_id: ${requestId})`);
+  logger.error(`[${new Date().toISOString()}] [INFO] Tool call: ${name} (request_id: ${requestId})`);
 
   try {
     // Validate request structure
@@ -1771,7 +1771,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           try {
             currentGraph = new ResearchQuestGraph(args.config || {});
           } catch (graphError) {
+
             console.error(`[${new Date().toISOString()}] [ERROR] Failed to create ResearchQuestGraph: ${graphError.message}`);
+
             throw new McpError(ErrorCode.InternalError, `Failed to create graph: ${graphError.message}`);
           }
 
@@ -1783,7 +1785,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           
           // Check if initialization was successful
           if (!initResult.success) {
-            console.error(`[${new Date().toISOString()}] [ERROR] Graph initialization failed: ${initResult.error || 'Unknown error'}`);
+            logger.error(`[${new Date().toISOString()}] [ERROR] Graph initialization failed: ${initResult.error || 'Unknown error'}`);
             return {
               content: [{ type: 'text', text: JSON.stringify({
                 ...initResult,
@@ -1793,7 +1795,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             };
           }
           
-          console.error(`[${new Date().toISOString()}] [INFO] Graph initialized with ${Object.keys(currentGraph.metadata.parameters).length} parameters active`);
+          logger.error(`[${new Date().toISOString()}] [INFO] Graph initialized with ${Object.keys(currentGraph.metadata.parameters).length} parameters active`);
           
           return {
             content: [{ type: 'text', text: JSON.stringify(initResult, null, 2) }]
@@ -1811,7 +1813,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Validate dimensions if provided
           if (args.dimensions !== undefined && !Array.isArray(args.dimensions)) {
-            console.error(`[${new Date().toISOString()}] [WARN] Invalid dimensions parameter, using defaults`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Invalid dimensions parameter, using defaults`);
             args.dimensions = undefined;
           }
 
@@ -1819,7 +1821,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           
           // Handle partial failures
           if (!decomposeResult.success) {
-            console.error(`[${new Date().toISOString()}] [ERROR] Task decomposition failed: ${decomposeResult.error || 'Unknown error'}`);
+            logger.error(`[${new Date().toISOString()}] [ERROR] Task decomposition failed: ${decomposeResult.error || 'Unknown error'}`);
             return {
               content: [{ type: 'text', text: JSON.stringify({
                 ...decomposeResult,
@@ -1866,7 +1868,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Handle partial success (some hypotheses failed)
           if (!hypothesesResult.success) {
-            console.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${hypothesesResult.error || 'Unknown error'}`);
+            logger.error(`[${new Date().toISOString()}] [ERROR] Hypothesis generation failed: ${hypothesesResult.error || 'Unknown error'}`);
             return {
               content: [{ type: 'text', text: JSON.stringify({
                 ...hypothesesResult,
@@ -1878,7 +1880,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Check for partial success with warnings
           if (hypothesesResult.warnings && hypothesesResult.warnings.length > 0) {
-            console.error(`[${new Date().toISOString()}] [WARN] Hypothesis generation had warnings: ${hypothesesResult.warnings.join(', ')}`);
+            logger.error(`[${new Date().toISOString()}] [WARN] Hypothesis generation had warnings: ${hypothesesResult.warnings.join(', ')}`);
           }
 
           return {
@@ -1913,7 +1915,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         } catch (error) {
           // Even if summary fails, provide basic information  
-          console.error(`[${new Date().toISOString()}] [ERROR] Summary generation failed: ${error.message}`);
+          logger.error(`[${new Date().toISOString()}] [ERROR] Summary generation failed: ${error.message}`);
           return {
             content: [{ type: 'text', text: JSON.stringify({
               success: false,
@@ -1962,7 +1964,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [{ type: 'text', text: exportedData }]
           };
         } catch (error) {
-          console.error(`[${new Date().toISOString()}] [ERROR] Export failed: ${error.message}`);
+          logger.error(`[${new Date().toISOString()}] [ERROR] Export failed: ${error.message}`);
           
           // Provide minimal export on failure
           const fallbackExport = {
@@ -1987,11 +1989,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[${new Date().toISOString()}] [ERROR] Tool execution failed: ${error.message} (request_id: ${requestId}, duration: ${duration}ms)`);
+    logger.error(`[${new Date().toISOString()}] [ERROR] Tool execution failed: ${error.message} (request_id: ${requestId}, duration: ${duration}ms)`);
     
     // Log stack trace for debugging
     if (error.stack) {
-      console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+      logger.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
     }
     
     if (error instanceof McpError) {
@@ -2009,8 +2011,10 @@ async function main() {
   let transport = null;
   
   try {
+
     console.error(`[${new Date().toISOString()}] [INFO] Starting Research-Quest MCP Server - FAULT-TOLERANT IMPLEMENTATION`);
     console.error(`[${new Date().toISOString()}] [INFO] Implementing comprehensive graph-based scientific reasoning with robust error handling`);
+
     
     // Pre-startup validation
     try {
@@ -2018,29 +2022,29 @@ async function main() {
       const nodeVersion = process.version;
       const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
       if (majorVersion < 16) {
-        console.error(`[${new Date().toISOString()}] [WARN] Node.js version ${nodeVersion} may not be fully supported. Recommended: 16+`);
+        logger.error(`[${new Date().toISOString()}] [WARN] Node.js version ${nodeVersion} may not be fully supported. Recommended: 16+`);
       }
       
       // Validate required modules
-      console.error(`[${new Date().toISOString()}] [INFO] Validating server dependencies...`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Validating server dependencies...`);
       
       // Test tool availability
       if (!tools || tools.length === 0) {
         throw new Error('No tools available - server configuration error');
       }
       
-      console.error(`[${new Date().toISOString()}] [INFO] ${tools.length} tools validated successfully`);
+      logger.error(`[${new Date().toISOString()}] [INFO] ${tools.length} tools validated successfully`);
     } catch (validationError) {
-      console.error(`[${new Date().toISOString()}] [WARN] Pre-startup validation warning: ${validationError.message}`);
+      logger.error(`[${new Date().toISOString()}] [WARN] Pre-startup validation warning: ${validationError.message}`);
       // Continue with startup anyway - this is non-critical
     }
     
     // Initialize transport with error handling
     try {
       transport = new StdioServerTransport();
-      console.error(`[${new Date().toISOString()}] [INFO] Transport initialized successfully`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Transport initialized successfully`);
     } catch (transportError) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Failed to initialize transport: ${transportError.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Failed to initialize transport: ${transportError.message}`);
       throw new Error(`Transport initialization failed: ${transportError.message}`);
     }
     
@@ -2048,7 +2052,7 @@ async function main() {
     const connectWithRetry = async (maxRetries = 3, retryDelay = 1000) => {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.error(`[${new Date().toISOString()}] [INFO] Server connection attempt ${attempt}/${maxRetries}`);
+          logger.error(`[${new Date().toISOString()}] [INFO] Server connection attempt ${attempt}/${maxRetries}`);
           
           // Add connection timeout
           const connectionPromise = server.connect(transport);
@@ -2058,16 +2062,16 @@ async function main() {
           
           await Promise.race([connectionPromise, timeoutPromise]);
           
-          console.error(`[${new Date().toISOString()}] [INFO] Server connected successfully on attempt ${attempt}`);
+          logger.error(`[${new Date().toISOString()}] [INFO] Server connected successfully on attempt ${attempt}`);
           return true;
         } catch (connectError) {
-          console.error(`[${new Date().toISOString()}] [ERROR] Connection attempt ${attempt} failed: ${connectError.message}`);
+          logger.error(`[${new Date().toISOString()}] [ERROR] Connection attempt ${attempt} failed: ${connectError.message}`);
           
           if (attempt === maxRetries) {
             throw connectError;
           }
           
-          console.error(`[${new Date().toISOString()}] [INFO] Retrying connection in ${retryDelay}ms...`);
+          logger.error(`[${new Date().toISOString()}] [INFO] Retrying connection in ${retryDelay}ms...`);
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           retryDelay *= 2; // Exponential backoff
         }
@@ -2077,9 +2081,11 @@ async function main() {
     await connectWithRetry();
     
     const startupDuration = Date.now() - startupTime;
+
     console.error(`[${new Date().toISOString()}] [INFO] Research-Quest MCP Server running successfully`);
     console.error(`[${new Date().toISOString()}] [INFO] Tools available: ${tools.length} | Startup time: ${startupDuration}ms`);
     console.error(`[${new Date().toISOString()}] [INFO] Server features: Fault-tolerant, Graceful degradation, Comprehensive error handling`);
+
     
     // Setup graceful shutdown handlers
     setupGracefulShutdown();
@@ -2089,29 +2095,29 @@ async function main() {
     
   } catch (error) {
     const startupDuration = Date.now() - startupTime;
-    console.error(`[${new Date().toISOString()}] [ERROR] Server startup failed after ${startupDuration}ms`);
-    console.error(`[${new Date().toISOString()}] [ERROR] Error: ${error.message}`);
+    logger.error(`[${new Date().toISOString()}] [ERROR] Server startup failed after ${startupDuration}ms`);
+    logger.error(`[${new Date().toISOString()}] [ERROR] Error: ${error.message}`);
     
     if (error.stack) {
-      console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+      logger.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
     }
     
     // Attempt graceful cleanup
     try {
       if (transport) {
-        console.error(`[${new Date().toISOString()}] [INFO] Attempting graceful cleanup...`);
+        logger.error(`[${new Date().toISOString()}] [INFO] Attempting graceful cleanup...`);
         // Add any cleanup logic here
       }
     } catch (cleanupError) {
-      console.error(`[${new Date().toISOString()}] [WARN] Cleanup failed: ${cleanupError.message}`);
+      logger.error(`[${new Date().toISOString()}] [WARN] Cleanup failed: ${cleanupError.message}`);
     }
     
     // Provide helpful error information
-    console.error(`[${new Date().toISOString()}] [INFO] Troubleshooting tips:`);
-    console.error(`[${new Date().toISOString()}] [INFO] 1. Check Node.js version (requires 16+)`);
-    console.error(`[${new Date().toISOString()}] [INFO] 2. Verify all dependencies are installed`);
-    console.error(`[${new Date().toISOString()}] [INFO] 3. Check for port conflicts or permission issues`);
-    console.error(`[${new Date().toISOString()}] [INFO] 4. Review the error message and stack trace above`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Troubleshooting tips:`);
+    logger.error(`[${new Date().toISOString()}] [INFO] 1. Check Node.js version (requires 16+)`);
+    logger.error(`[${new Date().toISOString()}] [INFO] 2. Verify all dependencies are installed`);
+    logger.error(`[${new Date().toISOString()}] [INFO] 3. Check for port conflicts or permission issues`);
+    logger.error(`[${new Date().toISOString()}] [INFO] 4. Review the error message and stack trace above`);
     
     process.exit(1);
   }
@@ -2120,19 +2126,19 @@ async function main() {
 // Setup graceful shutdown handling
 function setupGracefulShutdown() {
   const gracefulShutdown = (signal) => {
-    console.error(`[${new Date().toISOString()}] [INFO] Received ${signal}, initiating graceful shutdown...`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Received ${signal}, initiating graceful shutdown...`);
     
     try {
       // Clear any active graph state if needed
       if (currentGraph) {
-        console.error(`[${new Date().toISOString()}] [INFO] Saving graph state before shutdown...`);
+        logger.error(`[${new Date().toISOString()}] [INFO] Saving graph state before shutdown...`);
         // Could implement state persistence here
       }
       
-      console.error(`[${new Date().toISOString()}] [INFO] Graceful shutdown completed`);
+      logger.error(`[${new Date().toISOString()}] [INFO] Graceful shutdown completed`);
       process.exit(0);
     } catch (shutdownError) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Error during shutdown: ${shutdownError.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Error during shutdown: ${shutdownError.message}`);
       process.exit(1);
     }
   };
@@ -2142,29 +2148,29 @@ function setupGracefulShutdown() {
   
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
-    console.error(`[${new Date().toISOString()}] [CRITICAL] Uncaught exception: ${error.message}`);
-    console.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
+    logger.error(`[${new Date().toISOString()}] [CRITICAL] Uncaught exception: ${error.message}`);
+    logger.error(`[${new Date().toISOString()}] [DEBUG] Stack trace: ${error.stack}`);
     
     // Attempt to keep server running for graceful degradation
-    console.error(`[${new Date().toISOString()}] [INFO] Attempting to continue operation in degraded mode...`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Attempting to continue operation in degraded mode...`);
     
     // Reset currentGraph to prevent further issues
     try {
       if (currentGraph) {
         currentGraph = null;
-        console.error(`[${new Date().toISOString()}] [INFO] Reset graph state for recovery`);
+        logger.error(`[${new Date().toISOString()}] [INFO] Reset graph state for recovery`);
       }
     } catch (resetError) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Failed to reset graph state: ${resetError.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Failed to reset graph state: ${resetError.message}`);
     }
   });
   
   process.on('unhandledRejection', (reason, promise) => {
-    console.error(`[${new Date().toISOString()}] [CRITICAL] Unhandled promise rejection at:`, promise);
-    console.error(`[${new Date().toISOString()}] [CRITICAL] Reason:`, reason);
+    logger.error(`[${new Date().toISOString()}] [CRITICAL] Unhandled promise rejection at:`, promise);
+    logger.error(`[${new Date().toISOString()}] [CRITICAL] Reason:`, reason);
     
     // Log but don't crash - attempt graceful degradation
-    console.error(`[${new Date().toISOString()}] [INFO] Continuing operation in degraded mode...`);
+    logger.error(`[${new Date().toISOString()}] [INFO] Continuing operation in degraded mode...`);
   });
 }
 
@@ -2176,11 +2182,11 @@ function setupHealthMonitoring() {
       const uptime = process.uptime();
       
       // Log health info periodically (every 5 minutes)
-      console.error(`[${new Date().toISOString()}] [HEALTH] Server uptime: ${Math.floor(uptime)}s | Memory: ${Math.round(memUsage.rss / 1024 / 1024)}MB | Graph: ${currentGraph ? 'active' : 'none'}`);
+      logger.error(`[${new Date().toISOString()}] [HEALTH] Server uptime: ${Math.floor(uptime)}s | Memory: ${Math.round(memUsage.rss / 1024 / 1024)}MB | Graph: ${currentGraph ? 'active' : 'none'}`);
       
       // Check for memory leaks
       if (memUsage.rss > 500 * 1024 * 1024) { // 500MB threshold
-        console.error(`[${new Date().toISOString()}] [WARN] High memory usage detected: ${Math.round(memUsage.rss / 1024 / 1024)}MB`);
+        logger.error(`[${new Date().toISOString()}] [WARN] High memory usage detected: ${Math.round(memUsage.rss / 1024 / 1024)}MB`);
       }
       
       // Check graph state
@@ -2189,11 +2195,11 @@ function setupHealthMonitoring() {
         const edgeCount = currentGraph.edges.size;
         
         if (vertexCount > 10000 || edgeCount > 50000) {
-          console.error(`[${new Date().toISOString()}] [WARN] Large graph detected: ${vertexCount} vertices, ${edgeCount} edges`);
+          logger.error(`[${new Date().toISOString()}] [WARN] Large graph detected: ${vertexCount} vertices, ${edgeCount} edges`);
         }
       }
     } catch (healthError) {
-      console.error(`[${new Date().toISOString()}] [ERROR] Health check failed: ${healthError.message}`);
+      logger.error(`[${new Date().toISOString()}] [ERROR] Health check failed: ${healthError.message}`);
     }
   };
   
@@ -2205,6 +2211,6 @@ function setupHealthMonitoring() {
 }
 
 main().catch((error) => {
-  console.error(`[${new Date().toISOString()}] [CRITICAL] Main function failed: ${error.message}`);
+  logger.error(`[${new Date().toISOString()}] [CRITICAL] Main function failed: ${error.message}`);
   process.exit(1);
 });
