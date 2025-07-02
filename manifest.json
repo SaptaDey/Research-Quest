@@ -1,10 +1,10 @@
 {
   "dxt_version": "0.1",
-  "name": "scientific-reasoning-got",
-  "display_name": "Scientific Reasoning - Graph of Thoughts",
+  "name": "research-quest",
+  "display_name": "Research-Quest",
   "version": "1.0.1",
-  "description": "Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT) framework implementing complete 8-stage research methodology with 29 parameters for systematic scientific analysis.",
-  "long_description": "## Advanced Scientific Reasoning Graph-of-Thoughts (ASR-GoT)\n\nThis extension provides a comprehensive implementation of the ASR-GoT framework, enabling researchers to perform systematic scientific reasoning through an 8-stage graph-based methodology. Designed specifically for Dr. Saptaswa Dey's research in immunology, dermatology, and interdisciplinary scientific analysis.\n\n### Key Features\n- **Complete 8-Stage Pipeline**: Initialization → Decomposition → Hypothesis/Planning → Evidence Integration → Pruning/Merging → Subgraph Extraction → Composition → Reflection\n- **29 Parameters Implementation**: All P1.0-P1.29 parameters from the ASR-GoT specification\n- **Multi-dimensional Confidence Vectors**: 4D confidence representation with Bayesian updates\n- **Causal Inference**: Pearl's do-calculus and counterfactual reasoning\n- **Interdisciplinary Bridge Nodes**: Automatic cross-domain connection detection\n- **Temporal Analysis**: Pattern detection and temporal decay modeling\n- **Bias Detection**: Comprehensive bias identification and mitigation\n- **Statistical Power Analysis**: Sample size, effect size, and power calculations\n\n### Perfect for\n- Hypothesis generation and testing\n- Literature integration and evidence synthesis\n- Causal analysis and pathway mapping\n- Interdisciplinary research connections\n- Knowledge gap identification\n- Research planning and intervention design",
+  "description": "Leverage graph structures to transform how AI systems approach scientific reasoning.",
+  "long_description": "## Research-Quest\n\nResearch-Quest leverages advanced graph structures to transform how AI systems approach scientific reasoning. This extension provides a comprehensive framework enabling researchers to perform systematic scientific analysis through an innovative graph-based methodology.\n\n### Key Features\n- **Graph-Based Scientific Reasoning**: Transform complex research problems into structured knowledge graphs\n- **Systematic Research Methodology**: 8-stage process from initialization to reflection\n- **Multi-dimensional Confidence Tracking**: Bayesian belief updates with statistical rigor\n- **Causal Inference**: Pearl's do-calculus and counterfactual reasoning\n- **Interdisciplinary Bridge Nodes**: Automatic cross-domain connection detection\n- **Temporal Analysis**: Pattern detection and temporal decay modeling\n- **Bias Detection**: Comprehensive bias identification and mitigation\n- **Statistical Power Analysis**: Sample size, effect size, and power calculations\n\n### Perfect for\n- Hypothesis generation and testing\n- Literature integration and evidence synthesis\n- Causal analysis and pathway mapping\n- Interdisciplinary research connections\n- Knowledge gap identification\n- Research planning and intervention design",
   "icon": "icon.png",
   "author": {
     "name": "Dr. Saptaswa Dey",
@@ -46,9 +46,11 @@
   },
   "tools": [
     {
-      "name": "initialize_asr_got_graph",
-      "description": "P1.1: Initialize ASR-GoT graph with root node n₀ label='Task Understanding' and complete P1.12 metadata schema"
-    },
+// in server/index.js (around line ~1760 in your switch(toolName) dispatcher)
+-      case 'initialize_asr_got_graph':
++      case 'initialize_research_quest_graph':
+         // …handler logic…
+         break;
     {
       "name": "decompose_research_task", 
       "description": "P1.2: Decompose task into dimension nodes 2.1-2.7 with mandatory Potential Biases and Knowledge Gaps dimensions"
@@ -68,9 +70,9 @@
   ],
   "prompts": [
     {
-      "name": "asr_got_research_assistant",
-      "description": "Dr. Dey's personalized research assistant with formal academic communication style and expertise in immunology, dermatology, and machine learning",
-      "text": "You are Dr. Dey's specialized research assistant with expertise in immunology, dermatology, and machine learning. Communicate in formal academic style using Vancouver citations. Focus on rigorous scientific methodology, interdisciplinary connections, and practical research applications. Always consider bias detection, statistical power, and reproducibility."
+      "name": "research_quest_assistant",
+      "description": "Research-Quest assistant with formal academic communication style and expertise in scientific reasoning",
+      "text": "You are a Research-Quest specialized assistant with expertise in scientific reasoning using graph-based methodologies. Communicate in formal academic style using Vancouver citations. Focus on rigorous scientific methodology, interdisciplinary connections, and practical research applications. Always consider bias detection, statistical power, and reproducibility."
     },
     {
       "name": "interdisciplinary_bridge_finder",

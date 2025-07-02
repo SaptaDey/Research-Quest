@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Complete ASR-GoT MCP Server Implementation - Line by Line Specification Compliance
- * Advanced Scientific Reasoning Graph-of-Thoughts Model Context Protocol Server
+ * Research-Quest MCP Server Implementation
+ * Leverage graph structures to transform how AI systems approach scientific reasoning
  * 
- * Implements the complete 8-stage ASR-GoT framework with all 29 parameters (P1.0-P1.29)
- * Following the specification from scentific-reserch-GoT.md exactly line by line
+ * Implements a comprehensive graph-based framework for systematic scientific analysis
+ * Following modern MCP protocol standards with robust error handling
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -18,81 +18,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { v4 as uuidv4 } from 'uuid';
 
-import winston from 'winston';
 
-import fs from 'fs';
-
-// Production logging configuration
-
-// Create logs directory
-if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs', { recursive: true });
-}
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'asr-got-server', version: '1.0.0' },
-  transports: [
-    // Write error logs to dedicated file
-    new winston.transports.File({ 
-      filename: 'logs/asr-got-error.log', 
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
-    }),
-    // Write all logs to combined file
-    new winston.transports.File({ 
-      filename: 'logs/asr-got-combined.log',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
-    })
-  ],
-  // Handle exceptions and rejections
-  exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/asr-got-exceptions.log' })
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/asr-got-rejections.log' })
-  ]
-});
-
-// Add console transport for development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple(),
-      winston.format.timestamp({ format: 'HH:mm:ss' })
-    )
-  }));
-}
-
-// Helper function for structured logging with request context
-const logWithContext = (level, message, meta = {}) => {
-  const logMeta = {
-    timestamp: new Date().toISOString(),
-    ...meta
-  };
-  logger[level](message, logMeta);
-};
-
-
-// Complete ASR-GoT Graph State Management - Exact Specification Implementation
-class ASRGoTGraph {
+// Research-Quest Graph State Management - Production Implementation
+class ResearchQuestGraph {
   constructor(config = {}) {
     // P1.11: Mathematical Formalism - Gₜ = (Vₜ, Eₜ∪Eₕₜ, Lₜ, T, Cₜ, Mₜ, Iₜ)
     this.vertices = new Map(); // Vₜ
@@ -129,7 +57,7 @@ class ASRGoTGraph {
   // P1.0-P1.29: Initialize all parameters exactly as specified
   _initializeAllParameters() {
     return {
-      // Core ASR-GoT Protocol Parameters
+      // Core Research-Quest Protocol Parameters
       P1_0: { active: true, description: "Mandatory 8-stage GoT execution: 1.Initialization, 2.Decomposition, 3.Hypothesis/Planning, 4.Evidence Integration, 5.Pruning/Merging, 6.Subgraph Extraction, 7.Composition, 8.Reflection. Enhanced with advanced features P1.8-P1.29." },
       P1_1: { active: true, description: "Root node n₀ label='Task Understanding', confidence=C₀ (P1.5 multi-dimensional vector, high initial belief), metadata conforming to P1.12 schema." },
       P1_2: { active: true, description: "Default dimensions: Scope, Objectives, Constraints, Data Needs, Use Cases, Potential Biases (Ref P1.17), Knowledge Gaps (Ref P1.15). Initial confidence=C_dim (P1.5 vector, e.g., [0.8, 0.8, 0.8, 0.8])." },
@@ -1639,8 +1567,8 @@ let currentGraph = null;
 const tools = [
   // Stage 1: Initialization (P1.1)
   {
-    name: 'initialize_asr_got_graph',
-    description: 'P1.1: Initialize ASR-GoT graph with root node n₀ label="Task Understanding" and complete P1.12 metadata schema',
+    name: 'initialize_research_quest_graph',
+    description: 'Initialize Research-Quest graph with root node for systematic scientific reasoning',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1841,9 +1769,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
           // Initialize with error handling
           try {
-            currentGraph = new ASRGoTGraph(args.config || {});
+            currentGraph = new ResearchQuestGraph(args.config || {});
           } catch (graphError) {
-            logger.error(`[${new Date().toISOString()}] [ERROR] Failed to create ASRGoTGraph: ${graphError.message}`);
+
+            console.error(`[${new Date().toISOString()}] [ERROR] Failed to create ResearchQuestGraph: ${graphError.message}`);
+
             throw new McpError(ErrorCode.InternalError, `Failed to create graph: ${graphError.message}`);
           }
 
@@ -2081,8 +2011,10 @@ async function main() {
   let transport = null;
   
   try {
-    logger.error(`[${new Date().toISOString()}] [INFO] Starting ASR-GoT MCP Server - FAULT-TOLERANT IMPLEMENTATION`);
-    logger.error(`[${new Date().toISOString()}] [INFO] Implementing all 29 parameters (P1.0-P1.29) with comprehensive error handling`);
+
+    console.error(`[${new Date().toISOString()}] [INFO] Starting Research-Quest MCP Server - FAULT-TOLERANT IMPLEMENTATION`);
+    console.error(`[${new Date().toISOString()}] [INFO] Implementing comprehensive graph-based scientific reasoning with robust error handling`);
+
     
     // Pre-startup validation
     try {
@@ -2149,9 +2081,11 @@ async function main() {
     await connectWithRetry();
     
     const startupDuration = Date.now() - startupTime;
-    logger.error(`[${new Date().toISOString()}] [INFO] ASR-GoT MCP Server running successfully`);
-    logger.error(`[${new Date().toISOString()}] [INFO] Tools available: ${tools.length} | Startup time: ${startupDuration}ms`);
-    logger.error(`[${new Date().toISOString()}] [INFO] Server features: Fault-tolerant, Graceful degradation, Comprehensive error handling`);
+
+    console.error(`[${new Date().toISOString()}] [INFO] Research-Quest MCP Server running successfully`);
+    console.error(`[${new Date().toISOString()}] [INFO] Tools available: ${tools.length} | Startup time: ${startupDuration}ms`);
+    console.error(`[${new Date().toISOString()}] [INFO] Server features: Fault-tolerant, Graceful degradation, Comprehensive error handling`);
+
     
     // Setup graceful shutdown handlers
     setupGracefulShutdown();

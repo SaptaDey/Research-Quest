@@ -29,7 +29,9 @@
       "Bash(echo:*)",
       "Bash(npm init:*)",
       "Bash(timeout:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }
